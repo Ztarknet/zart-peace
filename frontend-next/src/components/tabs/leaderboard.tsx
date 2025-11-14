@@ -1,11 +1,13 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { lookupAddresses } from '@cartridge/controller';
 import { BasicTab } from "./basic";
 import { getLeaderboardPixels, getLeaderboardWorlds, getLeaderboardPixelsWorld } from "../../api/stats";
 import copyIcon from "../../../public/icons/copy.png";
 import { PaginationView } from "../utils/pagination";
 import { playSoftClick2 } from "../utils/sounds";
+
+// TODO: ZTARKNET: Replace lookupAddresses with Ztarknet username lookup
+// import { lookupAddresses } from '@cartridge/controller';
 
 export const LeaderboardTab = (props: any) => {
   const getLeaderboardTitle = () => {
@@ -71,19 +73,27 @@ export const LeaderboardTab = (props: any) => {
         }
         const newKeyNameMap = keyNameMap;
         const keysList = res.map((stat: any) => "0x" + stat.key);
-        let usernameMap: any = {};
-        if (selectedOption.name !== "Worlds") {
-          usernameMap = await lookupAddresses(keysList);
-        }
+
+        // TODO: ZTARKNET: Replace with Ztarknet username lookup
+        // let usernameMap: Map<string, string> = new Map();
+        // if (selectedOption.name !== "Worlds") {
+        //   usernameMap = await ztarknetSDK.lookupUsernames(keysList);
+        // }
+
         if (res && res.length !== 0) {
           res.forEach((stat: any) => {
             // Remove all 0s from the start of stat.key
             const unpaddedKey = "0x" + stat.key.replace(/^0+/, '');
-            if (selectedOption.name !== "Worlds" && usernameMap.has(unpaddedKey)) {
-              newKeyNameMap[stat.key] = usernameMap.get(unpaddedKey);
-            } else {
-              newKeyNameMap[stat.key] = "0x" + stat.key.slice(0, 4) + "..." + stat.key.slice(-4);
-            }
+
+            // TODO: ZTARKNET: Use username lookup when available
+            // if (selectedOption.name !== "Worlds" && usernameMap.has(unpaddedKey)) {
+            //   newKeyNameMap[stat.key] = usernameMap.get(unpaddedKey);
+            // } else {
+            //   newKeyNameMap[stat.key] = "0x" + stat.key.slice(0, 4) + "..." + stat.key.slice(-4);
+            // }
+
+            // Temporary: just show shortened address
+            newKeyNameMap[stat.key] = "0x" + stat.key.slice(0, 4) + "..." + stat.key.slice(-4);
           });
         }
         setKeyNameMap(newKeyNameMap);

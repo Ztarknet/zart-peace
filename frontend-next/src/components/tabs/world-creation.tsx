@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useAccount } from "@starknet-react/core";
+import { useAccount } from "@/contract/WalletConnector";
 import { BasicTab } from "./basic";
 import { createCanvasCall } from "../../contract/calls";
 import { getRoundsConfig } from "../../api/worlds";

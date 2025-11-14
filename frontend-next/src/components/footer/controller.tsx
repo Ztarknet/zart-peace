@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import { useEffect, useState } from "react";
-import { useAccount, useSnConnect } from "@/contract/WalletConnector";
-import ControllerConnector from "@cartridge/connector/controller";
+import { useAccount } from "@/contract/WalletConnector";
 import { getCanvasColors } from "../../api/canvas";
 import bot from "../../../public/icons/bot.png";
 import { AIController } from "./ai-agent";
@@ -11,8 +10,10 @@ import { playNotification, playSoftClick2 } from "../utils/sounds";
 export const GameController = (props: any) => {
   const enableAIAgent = false;
   const { address } = useAccount();
-  const { connect, connectors } = useSnConnect();
-  const controller = connectors[0] as ControllerConnector;
+
+  // TODO: ZTARKNET: Remove old connector references
+  // const { connect, connectors } = useSnConnect();
+  // const controller = connectors[0] as ControllerConnector;
 
   const [controllerText, setControllerText] = useState("XX:XX");
   const [placementMode, setPlacementMode] = useState(false);
@@ -29,7 +30,7 @@ export const GameController = (props: any) => {
 
   useEffect(() => {
     if (!address) {
-      setControllerText("Login to Play");
+      setControllerText("Create Account");
       return;
     }
     if (props.availablePixels > 0) {
@@ -53,7 +54,7 @@ export const GameController = (props: any) => {
       controllerText === "0:00" &&
       placementMode &&
       controllerText !== "Out of Pixels" as string &&
-      controllerText !== "Login to Play" as string
+      controllerText !== "Create Account" as string
     ) {
       playNotification();
       setEnded(true);
@@ -78,12 +79,7 @@ export const GameController = (props: any) => {
     }
 
     if (!address) {
-      try {
-        connect({ connector: controller });
-      } catch (error) {
-        console.log(error);
-      }
-      // props.setActiveTab("Account");
+      console.log("Create Account clicked from footer");
       return;
     }
 

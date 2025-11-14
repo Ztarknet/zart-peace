@@ -5,10 +5,11 @@ import {
   useAccount,
   useSnConnect,
   useDisconnect,
-  useSolConnect,
 } from "@/contract/WalletConnector";
-import ControllerConnector from "@cartridge/connector/controller";
 import { BasicTab } from "./basic";
+
+// TODO: ZTARKNET: Remove Cartridge Controller imports
+// import ControllerConnector from "@cartridge/connector/controller";
 import {
   getLeaderboardPixelsUser,
   getLeaderboardWorldUser,
@@ -27,21 +28,21 @@ import {
 
 export const AccountTab = (props: any) => {
   const { address, chain } = useAccount();
-  const { connect, connector, connectors } = useSnConnect();
-  const controller = connectors[0] as ControllerConnector;
   const { disconnect } = useDisconnect();
-  const { solConnect } = useSolConnect();
+
+  // TODO: ZTARKNET: Remove old connector references
+  // const { connect, connector, connectors } = useSnConnect();
 
   const [username, setUsername] = useState<string>("");
   const [addressShort, setAddressShort] = useState<string>();
   useEffect(() => {
     if (!address) return;
-    const controller = connector as ControllerConnector;
-    if (!controller?.username) {
-      setUsername("N/A");
-    } else {
-      controller.username()?.then((n) => setUsername(n));
-    }
+
+    // TODO: ZTARKNET: Get username from Ztarknet account
+    // const ztarknetUsername = await ztarknetAccount.getUsername();
+    // setUsername(ztarknetUsername || "N/A");
+
+    setUsername("N/A");
     setAddressShort(`${address.slice(0, 6)}...${address.slice(-4)}`);
   }, [address]);
 
@@ -49,25 +50,12 @@ export const AccountTab = (props: any) => {
     navigator.clipboard.writeText(text);
   };
 
-  const tryConnectController = () => {
+  // TODO: ZTARKNET: Replace with Ztarknet account creation
+  const createZtarknetAccount = async () => {
     try {
-      connect({ connector: controller });
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
-  const tryConnectPhantom = async () => {
-    try {
-      await solConnect();
-    } catch (err) {
-      console.error("Solana connection error:", err);
-    }
-  };
-
-  const tryConnectSnWallet = (connector: any) => {
-    try {
-      connect({ connector: connector });
+      // TODO: ZTARKNET: Create embedded Ztarknet account
+      // await ztarknetSDK.createAccount();
+      console.log("Create Ztarknet account");
     } catch (e) {
       console.log(e);
     }
@@ -129,36 +117,14 @@ export const AccountTab = (props: any) => {
   return (
     <BasicTab title="Account" {...props}>
       {!address && (
-        <div className="flex flex-col align-center justify-center w-full gap-[0.5rem]">
-          <h2 className="Text__large p-[0.5rem] my-[1rem]">Login!</h2>
+        <div className="flex flex-col align-center justify-center w-full gap-[0.5rem] px-[1rem] my-[2rem]">
           <div
             className="w-[100%] py-[0.7rem] px-[1rem] Text__medium Button__primary"
-            onClick={() => tryConnectController()}
+            onClick={createZtarknetAccount}
           >
             <div className="flex flex-col align-center justify-center gap-[0.5rem]">
-              <p className="Text__large">Controller</p>
-              <p className="Txt__small text-blue-500">No fees + Sessions!</p>
-            </div>
-          </div>
-          {connectors.slice(1).map((connector, index) => (
-            <div
-              key={index}
-              className="w-[100%] py-[0.7rem] px-[1rem] Text__medium Button__primary"
-              onClick={() => tryConnectSnWallet(connector)}
-            >
-              <div className="flex flex-col align-center justify-center gap-[0.5rem]">
-                <p className="Text__large">{connector.name}</p>
-                <p className="Txt__small text-green-700">Standard</p>
-              </div>
-            </div>
-          ))}
-          <div
-            className="w-[100%] py-[0.7rem] px-[1rem] Text__medium Button__primary"
-            onClick={() => tryConnectPhantom()}
-          >
-            <div className="flex flex-col align-center justify-center gap-[0.5rem]">
-              <p className="Text__large">Phantom</p>
-              <p className="Txt__small text-blue-500">Use Solana wallet!</p>
+              <p className="Text__large">Create Account</p>
+              <p className="Txt__small text-blue-500">Embedded Ztarknet!</p>
             </div>
           </div>
         </div>

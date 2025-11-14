@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { useAccount } from '@starknet-react/core';
-import { lookupAddresses } from '@cartridge/controller';
+import { useAccount } from '@/contract/WalletConnector';
 import { BasicTab } from "./basic";
 import { getPixelInfo } from "../../api/canvas";
+
+// TODO: ZTARKNET: Replace lookupAddresses with Ztarknet username lookup
+// import { lookupAddresses } from '@cartridge/controller';
 
 export const PixelInfoTab = (props: any) => {
   const [ownerAddress, setOwnerAddress] = useState<string>();
@@ -15,18 +17,17 @@ export const PixelInfoTab = (props: any) => {
         setOwnerUsername("No one!");
         return;
       }
-      const addressMap = await lookupAddresses([ownerAddress]);
-      if (!addressMap || addressMap.size === 0) {
-        setOwnerUsername(`${ownerAddress.slice(0, 6)}...${ownerAddress.slice(-4)}`);
-        return;
-      }
-      const value = addressMap.entries().next().value;
-      if (value === undefined) {
-        setOwnerUsername(`${ownerAddress.slice(0, 6)}...${ownerAddress.slice(-4)}`);
-        return;
-      }
-      const ownerUsername = value[1];
-      setOwnerUsername(ownerUsername);
+
+      // TODO: ZTARKNET: Replace with Ztarknet username lookup
+      // const username = await ztarknetSDK.lookupUsername(ownerAddress);
+      // if (username) {
+      //   setOwnerUsername(username);
+      // } else {
+      //   setOwnerUsername(`${ownerAddress.slice(0, 6)}...${ownerAddress.slice(-4)}`);
+      // }
+
+      // Temporary: just show shortened address
+      setOwnerUsername(`${ownerAddress.slice(0, 6)}...${ownerAddress.slice(-4)}`);
     }
     getOwnerUsername();
   }, [ownerAddress]);

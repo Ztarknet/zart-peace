@@ -1,71 +1,56 @@
-import * as sn from "@starknet-react/core";
-import * as sol from "@solana/wallet-adapter-react";
-import { PhantomWalletName } from "@solana/wallet-adapter-wallets";
-import { useRemoteSDK } from "../solana-remote-wallet/SolanaProvider";
+// TODO: ZTARKNET: Replace with Ztarknet SDK imports
+// import { useZtarknetAccount, useZtarknetConnect, useZtarknetDisconnect } from '@ztarknet/sdk';
 
 export const useAccount = () => {
-  const snAccount = sn.useAccount();
-  const solWallet = sol.useWallet();
+  // TODO: ZTARKNET: Replace with Ztarknet account hook
+  // const ztarknetAccount = useZtarknetAccount();
 
-  const { sdk } = useRemoteSDK();
-
-  if (snAccount.isConnected) {
-    return {
-      chain: "starknet",
-      account: snAccount.account,
-      address: snAccount.address,
-    };
-  }
-
-  if (solWallet.connected) {
-    return {
-      chain: "solana",
-      account: {
-        execute: async (calldata: Array<any>) => {
-          const hash = await sdk.remoteExecute({
-            wallet: solWallet as any,
-            calldata,
-            fee: { igp: 135_000_000 },
-          });
-
-          return { transaction_hash: hash };
-        },
-      },
-      address: solWallet.publicKey?.toString(),
-    };
-  }
+  // TODO: ZTARKNET: Return Ztarknet account info when connected
+  // if (ztarknetAccount.isConnected) {
+  //   return {
+  //     chain: "ztarknet",
+  //     account: {
+  //       execute: async (calldata: Array<any>) => {
+  //         // TODO: ZTARKNET: Invoke transaction on Ztarknet
+  //         // Example: Place pixel with position, color, timestamp
+  //         // const hash = await ztarknetAccount.invoke({
+  //         //   contractAddress: CANVAS_CONTRACT_ADDRESS,
+  //         //   entrypoint: 'place_pixel',
+  //         //   calldata: [world_id, position, color, timestamp]
+  //         // });
+  //         // return { transaction_hash: hash };
+  //       },
+  //     },
+  //     address: ztarknetAccount.address,
+  //   };
+  // }
 
   return {};
 };
 
 export const useSnConnect = () => {
-  const { connect, connector, connectors } = sn.useConnect();
+  // TODO: ZTARKNET: Replace with Ztarknet connect hook
+  // const { connect, isConnecting } = useZtarknetConnect();
 
   return {
-    connect,
-    connector,
-    connectors,
-  };
-};
-
-export const useSolConnect = () => {
-  const { select } = sol.useWallet();
-
-  return {
-    solConnect: async () => {
-      select(PhantomWalletName);
+    connect: () => {
+      // TODO: ZTARKNET: Implement connect logic
+      console.log("Connect Ztarknet account");
     },
+    connector: null,
+    connectors: [],
   };
 };
 
 export const useDisconnect = () => {
-  const { disconnect: snDisconnect } = sn.useDisconnect();
-  const { disconnect: solDisconnect } = sol.useWallet();
+  // TODO: ZTARKNET: Replace with Ztarknet disconnect hook
+  // const { disconnect: ztarknetDisconnect } = useZtarknetDisconnect();
 
   return {
     disconnect: async () => {
-      snDisconnect();
-      await solDisconnect();
+      // TODO: ZTARKNET: Call Ztarknet disconnect
+      // await ztarknetDisconnect();
+      console.log("Disconnect Ztarknet account");
     },
   };
 };

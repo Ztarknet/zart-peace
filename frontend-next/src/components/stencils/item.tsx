@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { CSSTransition } from "react-transition-group";
-import { useAccount } from '@starknet-react/core';
+import { useAccount } from '@/contract/WalletConnector';
 import FavoriteIcon from "../../../public/icons/Favorite.png";
 import FavoritedIcon from "../../../public/icons/Favorited.png";
 import Info from "../../../public/icons/Info.png";
@@ -9,7 +9,9 @@ import bot from "../../../public/icons/bot.png";
 import { playSoftClick2 } from "../utils/sounds";
 import { favoriteStencilCall, unfavoriteStencilCall } from "../../contract/calls";
 import { getStencilOwner } from "../../api/stencils";
-import { lookupAddresses } from '@cartridge/controller';
+
+// TODO: ZTARKNET: Replace lookupAddresses with Ztarknet username lookup
+// import { lookupAddresses } from '@cartridge/controller';
 
 export const StencilItem = (props: any) => {
   const { account, address } = useAccount();
@@ -21,17 +23,17 @@ export const StencilItem = (props: any) => {
       if (!showInfo) return;
       if (creatorText !== "...") return;
       const creator = await getStencilOwner(props.stencil.stencilId, props.activeWorld.worldId);
-      const addressMap = await lookupAddresses(["0x" + creator]);
-      if (!addressMap || addressMap.size === 0) {
-        setCreatorText(`0x${creator.slice(0, 6)}...${creator.slice(-4)}`);
-        return;
-      }
-      const value = addressMap.entries().next().value;
-      if (!value) {
-        setCreatorText(`0x${creator.slice(0, 6)}...${creator.slice(-4)}`);
-        return;
-      }
-      setCreatorText(value[1]);
+
+      // TODO: ZTARKNET: Replace with Ztarknet username lookup
+      // const username = await ztarknetSDK.lookupUsername("0x" + creator);
+      // if (username) {
+      //   setCreatorText(username);
+      // } else {
+      //   setCreatorText(`0x${creator.slice(0, 6)}...${creator.slice(-4)}`);
+      // }
+
+      // Temporary fallback: just show shortened address
+      setCreatorText(`0x${creator.slice(0, 6)}...${creator.slice(-4)}`);
     };
     getCreator();
   }, [showInfo]);
