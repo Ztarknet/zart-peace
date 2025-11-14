@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { StrictMode, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router';
-import { StarknetProvider } from "../components/StarknetProvider";
+import { ZtarknetConnectorProvider } from "@/context/ZtarknetConnector";
 import { usePreventZoom } from './window';
 import { playSoftClick2, getMusicVolume } from '../components/utils/sounds';
 // TODO: Proper routing here
@@ -123,9 +123,9 @@ function App() {
 export default function Home() {
   return (
     <StrictMode>
-      <StarknetProvider>
+      <ZtarknetConnectorProvider>
         <App />
-      </StarknetProvider>
+      </ZtarknetConnectorProvider>
     </StrictMode>
   );
 }

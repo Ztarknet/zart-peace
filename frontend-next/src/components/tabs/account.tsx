@@ -3,13 +3,11 @@ import { useState, useEffect, useRef } from "react";
 import { constants } from "starknet";
 import {
   useAccount,
-  useSnConnect,
   useDisconnect,
+  useZtarknetConnect,
+  useZtarknetCreate,
 } from "@/contract/WalletConnector";
 import { BasicTab } from "./basic";
-
-// TODO: ZTARKNET: Remove Cartridge Controller imports
-// import ControllerConnector from "@cartridge/connector/controller";
 import {
   getLeaderboardPixelsUser,
   getLeaderboardWorldUser,
@@ -29,19 +27,37 @@ import {
 export const AccountTab = (props: any) => {
   const { address, chain } = useAccount();
   const { disconnect } = useDisconnect();
-
-  // TODO: ZTARKNET: Remove old connector references
-  // const { connect, connector, connectors } = useSnConnect();
+  const { connect, getAvailableKeys, clearAvailableKeys } = useZtarknetConnect();
+  const { createAccount, deployAccount } = useZtarknetCreate();
 
   const [username, setUsername] = useState<string>("");
   const [addressShort, setAddressShort] = useState<string>();
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+
+  // Auto-connect if there's an existing account
+  useEffect(() => {
+    const autoConnect = async () => {
+      if (address) return; // Already connected
+
+      const availableKeys = getAvailableKeys();
+      if (availableKeys && availableKeys.length > 0) {
+        try {
+          await connect(availableKeys[0]);
+          console.log("Auto-connected to existing account");
+        } catch (error) {
+          console.error("Failed to auto-connect:", error);
+        }
+      }
+    };
+
+    autoConnect();
+  }, []);
+
   useEffect(() => {
     if (!address) return;
 
-    // TODO: ZTARKNET: Get username from Ztarknet account
-    // const ztarknetUsername = await ztarknetAccount.getUsername();
-    // setUsername(ztarknetUsername || "N/A");
-
+    // TODO: ZTARKNET: Get username from Ztarknet service
+    // For now, just show shortened address
     setUsername("N/A");
     setAddressShort(`${address.slice(0, 6)}...${address.slice(-4)}`);
   }, [address]);
@@ -50,14 +66,30 @@ export const AccountTab = (props: any) => {
     navigator.clipboard.writeText(text);
   };
 
-  // TODO: ZTARKNET: Replace with Ztarknet account creation
+  // Create new Ztarknet account
   const createZtarknetAccount = async () => {
     try {
-      // TODO: ZTARKNET: Create embedded Ztarknet account
-      // await ztarknetSDK.createAccount();
-      console.log("Create Ztarknet account");
-    } catch (e) {
-      console.log(e);
+      setIsCreatingAccount(true);
+      playSoftClick2();
+
+      // Create account
+      const { address: newAddress, privateKey } = await createAccount();
+      console.log("Account created:", newAddress);
+
+      // Connect to the new account
+      await connect(privateKey);
+      console.log("Connected to new account");
+
+      // TODO: Optionally deploy the account on-chain
+      // This requires funding the account first
+      // const txHash = await deployAccount(privateKey);
+      // console.log("Account deployed:", txHash);
+
+    } catch (error) {
+      console.error("Failed to create account:", error);
+      alert("Failed to create account. Please try again.");
+    } finally {
+      setIsCreatingAccount(false);
     }
   };
 
@@ -119,13 +151,25 @@ export const AccountTab = (props: any) => {
       {!address && (
         <div className="flex flex-col align-center justify-center w-full gap-[0.5rem] px-[1rem] my-[2rem]">
           <div
-            className="w-[100%] py-[0.7rem] px-[1rem] Text__medium Button__primary"
-            onClick={createZtarknetAccount}
+            className={`w-[100%] py-[0.7rem] px-[1rem] Text__medium Button__primary ${isCreatingAccount ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={isCreatingAccount ? undefined : createZtarknetAccount}
           >
             <div className="flex flex-col align-center justify-center gap-[0.5rem]">
-              <p className="Text__large">Create Account</p>
+              <p className="Text__large">
+                {isCreatingAccount ? "Creating Account..." : "Create Account"}
+              </p>
               <p className="Txt__small text-blue-500">Embedded Ztarknet!</p>
             </div>
+          </div>
+          <div
+            className={`w-[100%] py-[0.7rem] px-[1rem] Text__medium Button__primary ${isCreatingAccount ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={isCreatingAccount ? undefined : clearAvailableKeys}
+          >
+            <p className="Text__large">
+              {isCreatingAccount
+                ? "Please wait..."
+                : "Delete Accounts"}
+            </p>
           </div>
         </div>
       )}
@@ -163,10 +207,9 @@ export const AccountTab = (props: any) => {
           <div className="px-[0.5rem] mx-[0.5rem] mt-[1rem] flex flex-row align-center justify-between">
             <p className="Text__medium pr-[1rem]">Network&nbsp;:</p>
             <p className="Text__medium pr-[0.5rem] text-right">
-              {process.env.NEXT_PUBLIC_CHAIN_ID ===
-              constants.NetworkName.SN_MAIN
-                ? "Starknet Mainnet"
-                : "Starknet Sepolia"}
+              {process.env.NEXT_PUBLIC_ZTARKNET_NETWORK === "ZTARKNET_TESTNET"
+                ? "Ztarknet"
+                : "Ztarknet Devnet"}
             </p>
           </div>
 

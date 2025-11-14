@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
-import { CANVAS_CONTRACT_ADDRESS } from "../components/StarknetProvider";
+import { CANVAS_CONTRACT_ADDRESS } from "@/config/ztarknet";
 
 /*
 export const [submitted, setSubmitted] = useState(false);

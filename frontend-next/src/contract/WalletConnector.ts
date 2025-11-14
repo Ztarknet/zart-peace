@@ -1,56 +1,67 @@
-// TODO: ZTARKNET: Replace with Ztarknet SDK imports
-// import { useZtarknetAccount, useZtarknetConnect, useZtarknetDisconnect } from '@ztarknet/sdk';
+import { useZtarknetConnector } from "@/context/ZtarknetConnector";
+import { Call } from "starknet";
 
 export const useAccount = () => {
-  // TODO: ZTARKNET: Replace with Ztarknet account hook
-  // const ztarknetAccount = useZtarknetAccount();
+  const { account, address, isConnected } = useZtarknetConnector();
 
-  // TODO: ZTARKNET: Return Ztarknet account info when connected
-  // if (ztarknetAccount.isConnected) {
-  //   return {
-  //     chain: "ztarknet",
-  //     account: {
-  //       execute: async (calldata: Array<any>) => {
-  //         // TODO: ZTARKNET: Invoke transaction on Ztarknet
-  //         // Example: Place pixel with position, color, timestamp
-  //         // const hash = await ztarknetAccount.invoke({
-  //         //   contractAddress: CANVAS_CONTRACT_ADDRESS,
-  //         //   entrypoint: 'place_pixel',
-  //         //   calldata: [world_id, position, color, timestamp]
-  //         // });
-  //         // return { transaction_hash: hash };
-  //       },
-  //     },
-  //     address: ztarknetAccount.address,
-  //   };
-  // }
+  if (isConnected && account && address) {
+    return {
+      chain: "Ztarknet",
+      account: {
+        execute: async (calls: Call | Call[]) => {
+          const callsArray = Array.isArray(calls) ? calls : [calls];
+
+          // Use invokeContractCalls for multiple calls, invokeContract for single call
+          if (callsArray.length === 1) {
+            const response = await account.execute(callsArray[0]);
+            return { transaction_hash: response.transaction_hash };
+          } else {
+            const response = await account.execute(callsArray);
+            return { transaction_hash: response.transaction_hash };
+          }
+        },
+      },
+      address,
+    };
+  }
 
   return {};
 };
 
-export const useSnConnect = () => {
-  // TODO: ZTARKNET: Replace with Ztarknet connect hook
-  // const { connect, isConnecting } = useZtarknetConnect();
+export const useZtarknetConnect = () => {
+  const { connectStorageAccount, getAvailableKeys, clearAvailableKeys } = useZtarknetConnector();
 
   return {
-    connect: () => {
-      // TODO: ZTARKNET: Implement connect logic
-      console.log("Connect Ztarknet account");
-    },
-    connector: null,
-    connectors: [],
+    connect: connectStorageAccount,
+    getAvailableKeys,
+    clearAvailableKeys
+  };
+};
+
+export const useZtarknetCreate = () => {
+  const { createAccount, deployAccount } = useZtarknetConnector();
+
+  return {
+    createAccount,
+    deployAccount,
   };
 };
 
 export const useDisconnect = () => {
-  // TODO: ZTARKNET: Replace with Ztarknet disconnect hook
-  // const { disconnect: ztarknetDisconnect } = useZtarknetDisconnect();
+  const { disconnectAccount } = useZtarknetConnector();
 
   return {
-    disconnect: async () => {
-      // TODO: ZTARKNET: Call Ztarknet disconnect
-      // await ztarknetDisconnect();
-      console.log("Disconnect Ztarknet account");
+    disconnect: disconnectAccount,
+  };
+};
+
+// Legacy export for backward compatibility
+export const useSnConnect = () => {
+  return {
+    connect: () => {
+      console.log("Legacy connect - use useZtarknetConnect instead");
     },
+    connector: null,
+    connectors: [],
   };
 };
