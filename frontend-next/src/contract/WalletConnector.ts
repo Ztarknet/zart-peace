@@ -29,12 +29,24 @@ export const useAccount = () => {
 };
 
 export const useZtarknetConnect = () => {
-  const { connectStorageAccount, getAvailableKeys, clearAvailableKeys } = useZtarknetConnector();
+  const {
+    connectStorageAccount,
+    storeKeyAndConnect,
+    getAvailableKeys,
+    getPrivateKey,
+    storePrivateKey,
+    clearPrivateKey,
+    clearPrivateKeys
+  } = useZtarknetConnector();
 
   return {
     connect: connectStorageAccount,
+    storeKeyAndConnect,
     getAvailableKeys,
-    clearAvailableKeys
+    getPrivateKey,
+    storePrivateKey,
+    clearPrivateKey,
+    clearPrivateKeys
   };
 };
 

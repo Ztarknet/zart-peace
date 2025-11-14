@@ -27,23 +27,37 @@ import {
 export const AccountTab = (props: any) => {
   const { address, chain } = useAccount();
   const { disconnect } = useDisconnect();
-  const { connect, getAvailableKeys, clearAvailableKeys } = useZtarknetConnect();
+  const { connect, getAvailableKeys, getPrivateKey, clearPrivateKey, clearPrivateKeys } = useZtarknetConnect();
   const { createAccount, deployAccount } = useZtarknetCreate();
 
   const [username, setUsername] = useState<string>("");
   const [addressShort, setAddressShort] = useState<string>();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [availableAccounts, setAvailableAccounts] = useState<string[]>([]);
+
+  // Load available accounts on mount and when disconnecting
+  useEffect(() => {
+    const loadAvailableAccounts = () => {
+      const keyIds = getAvailableKeys();
+      setAvailableAccounts(keyIds);
+    };
+    loadAvailableAccounts();
+  }, [address, getAvailableKeys]);
 
   // Auto-connect if there's an existing account
   useEffect(() => {
     const autoConnect = async () => {
       if (address) return; // Already connected
 
-      const availableKeys = getAvailableKeys();
-      if (availableKeys && availableKeys.length > 0) {
+      const availableKeyIds = getAvailableKeys();
+      if (availableKeyIds && availableKeyIds.length > 0) {
         try {
-          await connect(availableKeys[0]);
-          console.log("Auto-connected to existing account");
+          // Get the private key from the first key ID
+          const privateKey = getPrivateKey(availableKeyIds[0]);
+          if (privateKey) {
+            await connect(privateKey);
+            console.log("Auto-connected to existing account");
+          }
         } catch (error) {
           console.error("Failed to auto-connect:", error);
         }
@@ -64,6 +78,58 @@ export const AccountTab = (props: any) => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
+  };
+
+  // Extract address from key ID
+  // Key ID format: {network}.{appName}.{accountClassName}.{address}
+  const extractAddressFromKeyId = (keyId: string): string => {
+    const parts = keyId.split('.');
+    return parts[parts.length - 1]; // Last part is the address
+  };
+
+  // Connect to a specific account by key ID
+  const connectToAccount = async (keyId: string) => {
+    try {
+      playSoftClick2();
+      const privateKey = getPrivateKey(keyId);
+      if (privateKey) {
+        await connect(privateKey);
+        console.log("Connected to account:", keyId);
+      } else {
+        console.error("Private key not found for:", keyId);
+      }
+    } catch (error) {
+      console.error("Failed to connect to account:", error);
+      alert("Failed to connect to account. Please try again.");
+    }
+  };
+
+  // Delete current account and logout
+  const deleteCurrentAccount = () => {
+    if (!address) return;
+
+    playSoftClick2();
+
+    // Find the key ID for the current address
+    const currentKeyId = availableAccounts.find(keyId =>
+      extractAddressFromKeyId(keyId).toLowerCase() === address.toLowerCase()
+    );
+
+    if (currentKeyId) {
+      clearPrivateKey(currentKeyId);
+      console.log("Deleted account:", currentKeyId);
+    }
+
+    // Disconnect
+    disconnect();
+  };
+
+  // Delete all accounts and refresh the list
+  const deleteAllAccounts = () => {
+    playSoftClick2();
+    clearPrivateKeys();
+    setAvailableAccounts([]); // Clear the UI list immediately
+    console.log("All accounts deleted");
   };
 
   // Create new Ztarknet account
@@ -150,6 +216,30 @@ export const AccountTab = (props: any) => {
     <BasicTab title="Account" {...props}>
       {!address && (
         <div className="flex flex-col align-center justify-center w-full gap-[0.5rem] px-[1rem] my-[2rem]">
+          {/* Available Accounts List */}
+          {availableAccounts.length > 0 && (
+            <div className="w-full mb-[1rem]">
+              <p className="Text__medium text-center mb-[0.5rem]">Available Accounts</p>
+              {availableAccounts.map((keyId, index) => {
+                const accountAddress = extractAddressFromKeyId(keyId);
+                const addressShort = `${accountAddress.slice(0, 6)}...${accountAddress.slice(-4)}`;
+                return (
+                  <div
+                    key={keyId}
+                    className={`w-[100%] py-[0.7rem] px-[1rem] mb-[0.5rem] Text__medium Button__primary ${isCreatingAccount ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    onClick={isCreatingAccount ? undefined : () => connectToAccount(keyId)}
+                  >
+                    <div className="flex flex-col align-center justify-center gap-[0.2rem]">
+                      <p className="Text__large">Connect Account {index + 1}</p>
+                      <p className="Text__small text-gray-600">{addressShort}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Create Account Button */}
           <div
             className={`w-[100%] py-[0.7rem] px-[1rem] Text__medium Button__primary ${isCreatingAccount ? 'opacity-50 cursor-not-allowed' : ''}`}
             onClick={isCreatingAccount ? undefined : createZtarknetAccount}
@@ -161,16 +251,20 @@ export const AccountTab = (props: any) => {
               <p className="Txt__small text-blue-500">Embedded Ztarknet!</p>
             </div>
           </div>
-          <div
-            className={`w-[100%] py-[0.7rem] px-[1rem] Text__medium Button__primary ${isCreatingAccount ? 'opacity-50 cursor-not-allowed' : ''}`}
-            onClick={isCreatingAccount ? undefined : clearAvailableKeys}
-          >
-            <p className="Text__large">
-              {isCreatingAccount
-                ? "Please wait..."
-                : "Delete Accounts"}
-            </p>
-          </div>
+
+          {/* Delete All Accounts Button */}
+          {availableAccounts.length > 0 && (
+            <div
+              className={`w-[100%] py-[0.7rem] px-[1rem] Text__medium Button__primary ${isCreatingAccount ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={isCreatingAccount ? undefined : deleteAllAccounts}
+            >
+              <p className="Text__large">
+                {isCreatingAccount
+                  ? "Please wait..."
+                  : "Delete All Accounts"}
+              </p>
+            </div>
+          )}
         </div>
       )}
       {address && (
@@ -334,10 +428,19 @@ export const AccountTab = (props: any) => {
         </div>
       </div>
       {address && (
-        <div className="flex flex-row align-center justify-center w-full pt-[2rem]">
+        <div className="flex flex-row align-center justify-center gap-[1rem] w-full pt-[2rem] px-[1rem]">
           <button
-            className="w-[70%] py-[0.7rem] px-[1rem] Text__medium Button__primary"
-            onClick={() => disconnect()}
+            className="flex-1 py-[0.7rem] px-[1rem] Text__medium Button__primary"
+            onClick={deleteCurrentAccount}
+          >
+            Delete Account
+          </button>
+          <button
+            className="flex-1 py-[0.7rem] px-[1rem] Text__medium Button__primary"
+            onClick={() => {
+              playSoftClick2();
+              disconnect();
+            }}
           >
             Logout
           </button>

@@ -39,9 +39,24 @@ export const CANVAS_CONTRACT_ADDRESS =
   process.env.NEXT_PUBLIC_CANVAS_CONTRACT_ADDRESS ||
   "0x011195b78f3765b1b8cfe841363e60f2335adf67af2443364d4b15cf8dff60ac";
 
+// App name for storage namespacing
+export const APP_NAME = "artpeace";
+
+// Account class name for storage identification
+export const ACCOUNT_CLASS_NAME = "ztarknet";
+
 // Storage keys for local storage
 export const STORAGE_KEYS = {
+  // Current active account
   ACCOUNT_ADDRESS: "ztarknet_account_address",
   ACCOUNT_PRIVATE_KEY: "ztarknet_account_private_key",
-  AVAILABLE_KEYS: "ztarknet_available_keys"
+
+  // Key identifier list - stores composite keys, NOT private keys
+  // Format: ztarknet.{network}.{appName}.keys
+  AVAILABLE_KEYS: (network: string) => `ztarknet.${network}.${APP_NAME}.keys`,
+
+  // Individual private key storage
+  // Format: {network}.{appName}.{accountClassName}.{address}
+  PRIVATE_KEY: (network: string, address: string) =>
+    `${network}.${APP_NAME}.${ACCOUNT_CLASS_NAME}.${address}`
 };
