@@ -118,11 +118,6 @@ export const Canva = (props: any) => {
   useEffect(() => {
     if (!props.gameUpdate) return;
     if (props.gameUpdate.messageType !== "colorWorldPixel") return;
-    // TODO: Check if world is active
-    if (parseInt(props.gameUpdate.worldId) < 13) {
-      props.setGameUpdate(null);
-      return;
-    }
     if (parseInt(props.gameUpdate.worldId) !== props.worldId as number) return;
     const update = props.gameUpdate;
     props.setGameUpdate(null);
