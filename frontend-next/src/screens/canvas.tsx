@@ -585,9 +585,9 @@ const Canvas = (props: any) => {
 
   // Bot mode
   const botOptions = [{
-    name: "Stencil Bot",
+    name: "Start Stencil Bot",
     selectOption: () => {
-      setSelectedBotOption("Stencil Bot");
+      setSelectedBotOption("Start Stencil Bot");
       if (!stencilImage) {
         setActiveTab("Stencils");
       }

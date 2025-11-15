@@ -11,10 +11,6 @@ export const GameController = (props: any) => {
   const enableAIAgent = false;
   const { address } = useAccount();
 
-  // TODO: ZTARKNET: Remove old connector references
-  // const { connect, connectors } = useSnConnect();
-  // const controller = connectors[0] as ControllerConnector;
-
   const [controllerText, setControllerText] = useState("XX:XX");
   const [placementMode, setPlacementMode] = useState(false);
   const [ended, setEnded] = useState(false); // Track if the timer has ended
@@ -190,7 +186,7 @@ export const GameController = (props: any) => {
           )
         }
       ))}
-      {props.botMode && props.selectedBotOption === "Stencil Bot" && (
+      {props.botMode && props.selectedBotOption === "Start Stencil Bot" && (
         <StencilBotController
           address={address}
           botMode={props.botMode}

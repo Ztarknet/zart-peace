@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { constants } from "starknet";
 import {
   useAccount,
@@ -23,17 +23,46 @@ import {
   setMusicVolume,
   playSoftClick2,
 } from "../utils/sounds";
+import { DeleteAccountModal } from "./delete-account-modal";
+import { DeleteAllAccountsModal } from "./delete-all-accounts-modal";
+import { FundAccountModal } from "./fund-account-modal";
 
 export const AccountTab = (props: any) => {
   const { address, chain } = useAccount();
   const { disconnect } = useDisconnect();
-  const { connect, getAvailableKeys, getPrivateKey, clearPrivateKey, clearPrivateKeys } = useZtarknetConnect();
+  const { connect, getAvailableKeys, getPrivateKey, clearPrivateKey, clearPrivateKeys, setFundingCallback, getBalance } = useZtarknetConnect();
   const { createAccount } = useZtarknetCreate();
 
   const [username, setUsername] = useState<string>("");
   const [addressShort, setAddressShort] = useState<string>();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [availableAccounts, setAvailableAccounts] = useState<string[]>([]);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [showDeleteAllAccountsModal, setShowDeleteAllAccountsModal] = useState(false);
+  const [showFundingModal, setShowFundingModal] = useState(false);
+  const [fundingAddress, setFundingAddress] = useState<string>("");
+  const [fundingResolve, setFundingResolve] = useState<(() => void) | null>(null);
+  const [fundingReject, setFundingReject] = useState<((reason?: any) => void) | null>(null);
+
+  // Create funding callback using useCallback to avoid recreating on every render
+  const fundingCallback = useCallback((accountAddress: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      setFundingAddress(accountAddress);
+      setShowFundingModal(true);
+      setFundingResolve(() => resolve);
+      setFundingReject(() => reject);
+    });
+  }, []);
+
+  // Register funding callback for modal-based funding
+  useEffect(() => {
+    setFundingCallback(fundingCallback);
+
+    // Cleanup on unmount
+    return () => {
+      setFundingCallback(null);
+    };
+  }, [setFundingCallback, fundingCallback]);
 
   // Load available accounts on mount and when disconnecting
   useEffect(() => {
@@ -43,29 +72,6 @@ export const AccountTab = (props: any) => {
     };
     loadAvailableAccounts();
   }, [address, getAvailableKeys]);
-
-  // Auto-connect if there's an existing account
-  useEffect(() => {
-    const autoConnect = async () => {
-      if (address) return; // Already connected
-
-      const availableKeyIds = getAvailableKeys();
-      if (availableKeyIds && availableKeyIds.length > 0) {
-        try {
-          // Get the private key from the first key ID
-          const privateKey = getPrivateKey(availableKeyIds[0]);
-          if (privateKey) {
-            await connect(privateKey);
-            console.log("Auto-connected to existing account");
-          }
-        } catch (error) {
-          console.error("Failed to auto-connect:", error);
-        }
-      }
-    };
-
-    autoConnect();
-  }, []);
 
   useEffect(() => {
     if (!address) return;
@@ -108,8 +114,6 @@ export const AccountTab = (props: any) => {
   const deleteCurrentAccount = () => {
     if (!address) return;
 
-    playSoftClick2();
-
     // Find the key ID for the current address
     const currentKeyId = availableAccounts.find(keyId =>
       extractAddressFromKeyId(keyId).toLowerCase() === address.toLowerCase()
@@ -126,10 +130,46 @@ export const AccountTab = (props: any) => {
 
   // Delete all accounts and refresh the list
   const deleteAllAccounts = () => {
-    playSoftClick2();
     clearPrivateKeys();
     setAvailableAccounts([]); // Clear the UI list immediately
     console.log("All accounts deleted");
+  };
+
+  // Open delete account modal
+  const handleDeleteAccountClick = () => {
+    playSoftClick2();
+    setShowDeleteAccountModal(true);
+  };
+
+  // Open delete all accounts modal
+  const handleDeleteAllAccountsClick = () => {
+    playSoftClick2();
+    setShowDeleteAllAccountsModal(true);
+  };
+
+  // Handle funding modal completion
+  const handleFundingComplete = () => {
+    setShowFundingModal(false);
+    if (fundingResolve) {
+      fundingResolve();
+      setFundingResolve(null);
+      setFundingReject(null);
+    }
+  };
+
+  // Handle funding modal cancellation
+  const handleFundingCancel = () => {
+    setShowFundingModal(false);
+    if (fundingReject) {
+      fundingReject(new Error("User cancelled funding"));
+      setFundingReject(null);
+    }
+    setFundingResolve(null);
+  };
+
+  // Wrapper for getBalance to be used by the modal
+  const checkFundingBalance = async () => {
+    return await getBalance(fundingAddress);
   };
 
   // Create new Ztarknet account
@@ -147,7 +187,12 @@ export const AccountTab = (props: any) => {
       console.log("Connected to new account");
     } catch (error) {
       console.error("Failed to create account:", error);
-      alert("Failed to create account. Please try again.");
+      // Don't show alert if user cancelled funding
+      if (error instanceof Error && error.message.includes("cancelled")) {
+        console.log("Account creation cancelled by user");
+      } else {
+        alert("Failed to create account. Please try again.");
+      }
     } finally {
       setIsCreatingAccount(false);
     }
@@ -250,7 +295,7 @@ export const AccountTab = (props: any) => {
           {availableAccounts.length > 0 && (
             <div
               className={`w-[100%] py-[0.7rem] px-[1rem] Text__medium Button__primary ${isCreatingAccount ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onClick={isCreatingAccount ? undefined : deleteAllAccounts}
+              onClick={isCreatingAccount ? undefined : handleDeleteAllAccountsClick}
             >
               <p className="Text__large">
                 {isCreatingAccount
@@ -425,7 +470,7 @@ export const AccountTab = (props: any) => {
         <div className="flex flex-row align-center justify-center gap-[1rem] w-full pt-[2rem] px-[1rem]">
           <button
             className="flex-1 py-[0.7rem] px-[1rem] Text__medium Button__primary"
-            onClick={deleteCurrentAccount}
+            onClick={handleDeleteAccountClick}
           >
             Delete Account
           </button>
@@ -440,6 +485,29 @@ export const AccountTab = (props: any) => {
           </button>
         </div>
       )}
+
+      {/* Delete Account Modal */}
+      <DeleteAccountModal
+        isOpen={showDeleteAccountModal}
+        onClose={() => setShowDeleteAccountModal(false)}
+        onConfirm={deleteCurrentAccount}
+      />
+
+      {/* Delete All Accounts Modal */}
+      <DeleteAllAccountsModal
+        isOpen={showDeleteAllAccountsModal}
+        onClose={() => setShowDeleteAllAccountsModal(false)}
+        onConfirm={deleteAllAccounts}
+      />
+
+      {/* Fund Account Modal */}
+      <FundAccountModal
+        isOpen={showFundingModal}
+        accountAddress={fundingAddress}
+        onFunded={handleFundingComplete}
+        onCancel={handleFundingCancel}
+        checkBalance={checkFundingBalance}
+      />
     </BasicTab>
   );
 };

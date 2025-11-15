@@ -55,7 +55,7 @@ export const StencilItem = (props: any) => {
     props.setOpenedStencil(props.stencil);
     
     // If bot mode is already active and stencil bot is selected, do nothing
-    if (props.botMode && props.selectedBotOption === "Stencil Bot") {
+    if (props.botMode && props.selectedBotOption === "Start Stencil Bot") {
       return;
     }
     
@@ -65,12 +65,12 @@ export const StencilItem = (props: any) => {
       // Use setTimeout to wait for state update
       setTimeout(() => {
         if (props.setSelectedBotOption) {
-          props.setSelectedBotOption("Stencil Bot");
+          props.setSelectedBotOption("Start Stencil Bot");
         }
       }, 10);
     } else if (props.botMode && props.setSelectedBotOption) {
       // Bot mode is already enabled, just set the option
-      props.setSelectedBotOption("Stencil Bot");
+      props.setSelectedBotOption("Start Stencil Bot");
     }
   }
 

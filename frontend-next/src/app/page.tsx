@@ -103,8 +103,8 @@ function App() {
               }}
             />
             <p className="text-md text-black absolute top-[45%] left-[65%]
-              transform translate-x-[-50%] translate-y-[-50%] pointer-events-none
-              "></p>
+              pointer-events-none font-bold"
+              style={{ animation: 'breathing 2s ease-in-out infinite' }}>Z</p>
           </div>
         </div>
         {!hasLaunched && <Teaser />}

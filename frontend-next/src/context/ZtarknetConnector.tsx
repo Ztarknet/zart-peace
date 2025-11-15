@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import {
   Account,
   RpcProvider,
@@ -10,6 +10,8 @@ import {
   Call,
   constants,
   InvokeFunctionResponse,
+  Contract,
+  uint256,
 } from "starknet";
 import { getNetworkConfig, getCurrentNetwork, STORAGE_KEYS, CANVAS_CONTRACT_ADDRESS } from "@/config/ztarknet";
 
@@ -24,6 +26,7 @@ interface ZtarknetConnectorContextType {
   connectStorageAccount: (privateKey: string) => Promise<void>;
   storeKeyAndConnect: (privateKey: string) => Promise<void>;
   mintFunds: (toAddress: string, amount: string) => Promise<void>;
+  setFundingCallback: (callback: ((address: string) => Promise<void>) | null) => void;
 
   // Storage management
   getAvailableKeys: () => string[];
@@ -39,6 +42,7 @@ interface ZtarknetConnectorContextType {
 
   // Utility
   deployAccount: (privateKey: string, accountAddress: string) => Promise<string>;
+  getBalance: (accountAddress: string, tokenAddress?: string) => Promise<bigint>;
 }
 
 const ZtarknetConnectorContext = createContext<ZtarknetConnectorContextType | undefined>(
@@ -59,6 +63,7 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
   const [account, setAccount] = useState<Account | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [provider, setProvider] = useState<RpcProvider | null>(null);
+  const fundingCallbackRef = React.useRef<((address: string) => Promise<void>) | null>(null);
 
   // Initialize provider
   const initializeProvider = useCallback(() => {
@@ -234,27 +239,74 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
     }
   }, []);
 
+  // ERC20 ABI for balanceOf
+  const ERC20_ABI = [
+    {
+      name: "balanceOf",
+      type: "function",
+      inputs: [
+        {
+          name: "account",
+          type: "core::starknet::contract_address::ContractAddress",
+        },
+      ],
+      outputs: [{ type: "core::integer::u256" }],
+      state_mutability: "view",
+    },
+  ];
+
+  const getBalance = useCallback(async (accountAddress: string, tokenAddress?: string): Promise<bigint> => {
+    try {
+      const currentProvider = provider || initializeProvider();
+      const feeToken = tokenAddress || process.env.NEXT_PUBLIC_FEE_TOKEN || "0x1ad102b4c4b3e40a51b6fb8a446275d600555bd63a95cdceed3e5cef8a6bc1d";
+
+      const tokenContract = new Contract({
+        abi: ERC20_ABI,
+        address: feeToken,
+        providerOrAccount: currentProvider,
+      });
+
+      const balance = await tokenContract.balanceOf(accountAddress);
+      const balanceValue = uint256.uint256ToBN(balance);
+
+      return balanceValue;
+    } catch (error) {
+      console.error("Failed to get balance:", error);
+      return BigInt(0);
+    }
+  }, [provider, initializeProvider]);
+
+  const setFundingCallback = useCallback((callback: ((address: string) => Promise<void>) | null) => {
+    fundingCallbackRef.current = callback;
+  }, []);
+
   const mintFunds = useCallback(async (toAddress: string, amount: string): Promise<void> => {
     try {
       const currentProvider = provider || initializeProvider();
       const config = getNetworkConfig();
 
-      // Manual funding: Display address and wait for user confirmation
-      console.log(`Please send funds to this address to continue: ${toAddress}`);
+      // Use custom funding callback if available (e.g., modal), otherwise use window.prompt
+      if (fundingCallbackRef.current) {
+        console.log(`Opening funding modal for address: ${toAddress}`);
+        await fundingCallbackRef.current(toAddress);
+        console.log("Funding completed via modal");
+      } else {
+        // Fallback: Manual funding with window.prompt
+        console.log(`Please send funds to this address to continue: ${toAddress}`);
 
-      // Wait for user to type "Done" in the prompt
-      let userInput = "";
-      while (userInput !== "Done") {
-        userInput = window.prompt(
-          `Please send funds to this address:\n\n${toAddress}\n\nType "Done" when you have completed the transfer:`
-        ) || "";
+        let userInput = "";
+        while (userInput !== "Done") {
+          userInput = window.prompt(
+            `Please send funds to this address:\n\n${toAddress}\n\nType "Done" when you have completed the transfer:`
+          ) || "";
 
-        if (userInput !== "Done" && userInput !== "") {
-          alert('Please type "Done" exactly (case-sensitive) to continue.');
+          if (userInput !== "Done" && userInput !== "") {
+            alert('Please type "Done" exactly (case-sensitive) to continue.');
+          }
         }
-      }
 
-      console.log("Minting completed");
+        console.log("Minting completed");
+      }
     } catch (error) {
       console.error("Failed to mint funds:", error);
       throw error;
@@ -351,7 +403,9 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
         });
 
         setAccount(accountInstance);
-        setAddress(accountAddress);
+        // address = accountAddress -> strip leading '0x' and pad to 64 chars -> add '0x' prefix back
+        const paddedAddress = '0x' + accountAddress.slice(2).padStart(64, '0');
+        setAddress(paddedAddress);
         setProvider(currentProvider);
 
         console.log("Connected to account:", accountAddress);
@@ -466,14 +520,39 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
     [account, provider]
   );
 
+  // Auto-connect on app load if there's an existing account
+  useEffect(() => {
+    const autoConnect = async () => {
+      if (account) return; // Already connected
+
+      const availableKeyIds = getAvailableKeys();
+      if (availableKeyIds && availableKeyIds.length > 0) {
+        try {
+          // Get the private key from the first key ID
+          const privateKey = getPrivateKey(availableKeyIds[0]);
+          if (privateKey) {
+            await connectStorageAccount(privateKey);
+            console.log("Auto-connected to existing account on app load");
+          }
+        } catch (error) {
+          console.error("Failed to auto-connect on app load:", error);
+        }
+      }
+    };
+
+    autoConnect();
+  }, []); // Empty dependency array means this runs once on mount
+
   const value: ZtarknetConnectorContextType = {
     account,
     address,
     isConnected: !!account && !!address,
     provider,
+    mintFunds,
     createAccount,
     connectStorageAccount,
     storeKeyAndConnect,
+    setFundingCallback,
     getAvailableKeys,
     getPrivateKey,
     storePrivateKey,
@@ -483,6 +562,7 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
     invokeContract,
     invokeContractCalls,
     deployAccount,
+    getBalance,
   };
 
   return (

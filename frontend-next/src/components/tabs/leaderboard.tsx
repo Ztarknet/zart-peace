@@ -99,16 +99,16 @@ export const LeaderboardTab = (props: any) => {
         setKeyNameMap(newKeyNameMap);
         if (leaderboardPagination.page === 1) {
           if (selectedOption.name === "Worlds") {
-            setLeaderboardStats(res.filter((stat: any) => stat.key !== "Art Peace III" && stat.key !== "art/peace"));
-            setMainWorldStats(res.find((stat: any) => stat.key === "Art Peace III" || stat.key === "art/peace"));
+            setLeaderboardStats(res.filter((stat: any) => stat.key !== "Art Peace III" && stat.key !== "zart/peace"));
+            setMainWorldStats(res.find((stat: any) => stat.key === "Art Peace III" || stat.key === "zart/peace"));
           } else {
             setLeaderboardStats(res);
             setMainWorldStats({});
           }
         } else {
           if (selectedOption.name === "Worlds") {
-            setLeaderboardStats([...leaderboardStats, ...res.filter((stat: any) => stat.key !== "Art Peace III" && stat.key !== "art/peace")]);
-            setMainWorldStats(res.find((stat: any) => stat.key === "Art Peace III" || stat.key === "art/peace"));
+            setLeaderboardStats([...leaderboardStats, ...res.filter((stat: any) => stat.key !== "Art Peace III" && stat.key !== "zart/peace")]);
+            setMainWorldStats(res.find((stat: any) => stat.key === "Art Peace III" || stat.key === "zart/peace"));
           } else {
             setLeaderboardStats([...leaderboardStats, ...res]);
             setMainWorldStats({});

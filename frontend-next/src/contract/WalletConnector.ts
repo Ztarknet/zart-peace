@@ -36,7 +36,9 @@ export const useZtarknetConnect = () => {
     getPrivateKey,
     storePrivateKey,
     clearPrivateKey,
-    clearPrivateKeys
+    clearPrivateKeys,
+    setFundingCallback,
+    getBalance
   } = useZtarknetConnector();
 
   return {
@@ -46,7 +48,9 @@ export const useZtarknetConnect = () => {
     getPrivateKey,
     storePrivateKey,
     clearPrivateKey,
-    clearPrivateKeys
+    clearPrivateKeys,
+    setFundingCallback,
+    getBalance
   };
 };
 

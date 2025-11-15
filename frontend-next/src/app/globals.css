@@ -420,6 +420,15 @@ input[type="range"]:hover::-moz-range-thumb {
   }
 }
 
+@keyframes breathing {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.07);
+  }
+}
+
 .Anim__rainbow {
   animation:
     pulse 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1),
