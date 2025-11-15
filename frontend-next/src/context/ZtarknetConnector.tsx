@@ -23,6 +23,7 @@ interface ZtarknetConnectorContextType {
   createAccount: () => Promise<{ address: string; privateKey: string }>;
   connectStorageAccount: (privateKey: string) => Promise<void>;
   storeKeyAndConnect: (privateKey: string) => Promise<void>;
+  mintFunds: (toAddress: string, amount: string) => Promise<void>;
 
   // Storage management
   getAvailableKeys: () => string[];
@@ -37,7 +38,7 @@ interface ZtarknetConnectorContextType {
   invokeContractCalls: (calls: Call[]) => Promise<InvokeFunctionResponse>;
 
   // Utility
-  deployAccount: (privateKey: string) => Promise<string>;
+  deployAccount: (privateKey: string, accountAddress: string) => Promise<string>;
 }
 
 const ZtarknetConnectorContext = createContext<ZtarknetConnectorContextType | undefined>(
@@ -72,41 +73,39 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
   }, []);
 
   // Generate a random private key
-  const generatePrivateKey = (): string => {
+  function generatePrivateKey(): string {
+    // Generate a valid Stark private key
+    // The key must be in range: 1 <= n < CURVE_ORDER
+    // We generate 252 bits (31.5 bytes) to stay safely within the curve order
     const randomBytes = new Uint8Array(31);
-    if (typeof window !== "undefined" && window.crypto) {
-      window.crypto.getRandomValues(randomBytes);
-    } else {
-      // Fallback for environments without crypto
-      for (let i = 0; i < randomBytes.length; i++) {
-        randomBytes[i] = Math.floor(Math.random() * 256);
-      }
-    }
-
-    const hex = Array.from(randomBytes)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    return "0x" + hex;
-  };
+    crypto.getRandomValues(randomBytes);
+  
+    // Convert to hex string and ensure it starts with 0x
+    let hexString = '0x' + Array.from(randomBytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  
+    return hexString;
+  }
 
   // Calculate account address from private key
-  const calculateAccountAddress = (privateKey: string): string => {
-    const config = getNetworkConfig();
-    const publicKey = ec.starkCurve.getStarkKey(privateKey);
-
-    const constructorCalldata = CallData.compile({
-      publicKey: publicKey,
-    });
-
-    const accountAddress = hash.calculateContractAddressFromHash(
-      publicKey, // salt
-      config.accountClassHash,
+  const calculateAccountAddress = (privateKey: string, classHash: string): string => {
+    // Get the Stark public key from private key
+    const starkKeyPub = ec.starkCurve.getStarkKey(privateKey);
+  
+    // Constructor calldata is just the public key for this account type
+    const constructorCalldata = [starkKeyPub];
+  
+    // Calculate the contract address
+    const contractAddress = hash.calculateContractAddressFromHash(
+      starkKeyPub,
+      classHash,
       constructorCalldata,
-      0 // deployer address
+      0
     );
-
-    return accountAddress;
-  };
+  
+    return contractAddress;
+  }
 
   // ==================== Storage Management Functions ====================
   // These functions follow the secure storage pattern from StarknetConnector
@@ -235,17 +234,51 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
     }
   }, []);
 
+  const mintFunds = useCallback(async (toAddress: string, amount: string): Promise<void> => {
+    try {
+      const currentProvider = provider || initializeProvider();
+      const config = getNetworkConfig();
+
+      // Manual funding: Display address and wait for user confirmation
+      console.log(`Please send funds to this address to continue: ${toAddress}`);
+
+      // Wait for user to type "Done" in the prompt
+      let userInput = "";
+      while (userInput !== "Done") {
+        userInput = window.prompt(
+          `Please send funds to this address:\n\n${toAddress}\n\nType "Done" when you have completed the transfer:`
+        ) || "";
+
+        if (userInput !== "Done" && userInput !== "") {
+          alert('Please type "Done" exactly (case-sensitive) to continue.');
+        }
+      }
+
+      console.log("Minting completed");
+    } catch (error) {
+      console.error("Failed to mint funds:", error);
+      throw error;
+    }
+  }, [provider, initializeProvider]);
+
   // Create a new account
   const createAccount = useCallback(async (): Promise<{ address: string; privateKey: string }> => {
     try {
       const config = getNetworkConfig();
       const privateKey = generatePrivateKey();
-      const accountAddress = calculateAccountAddress(privateKey);
+      const accountAddress = calculateAccountAddress(privateKey, config.accountClassHash);
+      console.log("Creating new account:", accountAddress);
+
+      const fundingAmount = "100000000000000000"; // 0.1 tokens (10^17)
+      await mintFunds(accountAddress, fundingAmount);
+      console.log("Account funded, proceeding to deploy...");
+
+      await deployAccount(privateKey, accountAddress);
 
       // Store the account credentials
       storePrivateKey(privateKey, accountAddress);
 
-      console.log("Account created:", {
+      console.log("Account deployed:", {
         address: accountAddress,
         privateKey: privateKey.substring(0, 10) + "...",
       });
@@ -259,13 +292,13 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
 
   // Deploy an account on-chain
   const deployAccount = useCallback(
-    async (privateKey: string): Promise<string> => {
+    async (privateKey: string, accountAddress: string): Promise<string> => {
       try {
         const config = getNetworkConfig();
         const currentProvider = provider || initializeProvider();
 
-        const publicKey = ec.starkCurve.getStarkKey(privateKey);
-        const accountAddress = calculateAccountAddress(privateKey);
+        const starkKeyPub = ec.starkCurve.getStarkKey(privateKey);
+        const constructorCalldata = [starkKeyPub];
 
         const accountInstance = new Account({
           provider: currentProvider,
@@ -275,16 +308,12 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
           transactionVersion: '0x3'
         });
 
-        const constructorCalldata = CallData.compile({
-          publicKey: publicKey,
-        });
-
         console.log("Deploying account...", accountAddress);
 
         const deployResponse = await accountInstance.deployAccount({
           classHash: config.accountClassHash,
           constructorCalldata,
-          addressSalt: publicKey,
+          addressSalt: starkKeyPub,
         });
 
         console.log("Account deployment transaction:", deployResponse.transaction_hash);
@@ -311,7 +340,7 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
         const config = getNetworkConfig();
         const currentProvider = provider || initializeProvider();
 
-        const accountAddress = calculateAccountAddress(privateKey);
+        const accountAddress = calculateAccountAddress(privateKey, config.accountClassHash);
 
         const accountInstance = new Account({
           provider: currentProvider,
@@ -342,7 +371,8 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
   const storeKeyAndConnect = useCallback(
     async (privateKey: string): Promise<void> => {
       try {
-        const accountAddress = calculateAccountAddress(privateKey);
+        const config = getNetworkConfig();
+        const accountAddress = calculateAccountAddress(privateKey, config.accountClassHash);
 
         // Store the key first
         storePrivateKey(privateKey, accountAddress);

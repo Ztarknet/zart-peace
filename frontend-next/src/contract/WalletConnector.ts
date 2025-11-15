@@ -51,11 +51,10 @@ export const useZtarknetConnect = () => {
 };
 
 export const useZtarknetCreate = () => {
-  const { createAccount, deployAccount } = useZtarknetConnector();
+  const { createAccount } = useZtarknetConnector();
 
   return {
     createAccount,
-    deployAccount,
   };
 };
 

@@ -768,7 +768,7 @@ func getLeaderboardPixels(w http.ResponseWriter, r *http.Request) {
 
 	minSupportedWorld := r.URL.Query().Get("minSupportedWorld")
 	if minSupportedWorld == "" {
-		minSupportedWorld = "13"
+		minSupportedWorld = "0"
 	}
 	minSupportedWorldInt, err := strconv.Atoi(minSupportedWorld)
 	if err != nil {
@@ -824,7 +824,7 @@ func getLeaderboardWorlds(w http.ResponseWriter, r *http.Request) {
 
 	minSupportedWorld := r.URL.Query().Get("minSupportedWorld")
 	if minSupportedWorld == "" {
-		minSupportedWorld = "13"
+		minSupportedWorld = "0"
 	}
 	minSupportedWorldInt, err := strconv.Atoi(minSupportedWorld)
 	if err != nil {
@@ -928,7 +928,7 @@ func getLeaderboardPixelsUser(w http.ResponseWriter, r *http.Request) {
 	}
 	minSupportedWorld := r.URL.Query().Get("minSupportedWorld")
 	if minSupportedWorld == "" {
-		minSupportedWorld = "13"
+		minSupportedWorld = "0"
 	}
 	minSupportedWorldInt, err := strconv.Atoi(minSupportedWorld)
 	if err != nil {

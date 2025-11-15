@@ -79,7 +79,7 @@ export const GameController = (props: any) => {
     }
 
     if (!address) {
-      console.log("Create Account clicked from footer");
+      props.setActiveTab("Account");
       return;
     }
 

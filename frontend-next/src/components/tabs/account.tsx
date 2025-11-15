@@ -28,7 +28,7 @@ export const AccountTab = (props: any) => {
   const { address, chain } = useAccount();
   const { disconnect } = useDisconnect();
   const { connect, getAvailableKeys, getPrivateKey, clearPrivateKey, clearPrivateKeys } = useZtarknetConnect();
-  const { createAccount, deployAccount } = useZtarknetCreate();
+  const { createAccount } = useZtarknetCreate();
 
   const [username, setUsername] = useState<string>("");
   const [addressShort, setAddressShort] = useState<string>();
@@ -145,12 +145,6 @@ export const AccountTab = (props: any) => {
       // Connect to the new account
       await connect(privateKey);
       console.log("Connected to new account");
-
-      // TODO: Optionally deploy the account on-chain
-      // This requires funding the account first
-      // const txHash = await deployAccount(privateKey);
-      // console.log("Account deployed:", txHash);
-
     } catch (error) {
       console.error("Failed to create account:", error);
       alert("Failed to create account. Please try again.");
