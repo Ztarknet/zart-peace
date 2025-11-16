@@ -1,15 +1,16 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useAccount } from "@/contract/WalletConnector";
+import { useZtarknetConnector } from "@/context/ZtarknetConnector";
 import { BasicTab } from "./basic";
-import { createCanvasCall } from "../../contract/calls";
 import { getRoundsConfig } from "../../api/worlds";
 import plus from "../../../public/icons/Edit.png";
 import "./world-creation.css";
 import { playSoftClick2 } from "../utils/sounds";
 
 export const WorldCreationTab = (props: any) => {
-  const { account, address } = useAccount();
+  const { address } = useAccount();
+  const { createCanvas } = useZtarknetConnector();
   const [usingCompetitionConfig, setUsingCompetitionConfig] = useState(true);
   const submit = async () => {
     playSoftClick2();
@@ -17,9 +18,9 @@ export const WorldCreationTab = (props: any) => {
     const hexPalette = palette.map((color) => `0x${color.toLowerCase()}`);
     return;
     if (!usingCompetitionConfig) {
-      await createCanvasCall(account, address as string, toHex(worldName), toHex(worldSlug), worldWidth, worldHeight, pixelsPer, timer, hexPalette, Math.floor(start / 1000), Math.floor(end / 1000));
+      await createCanvas(address as string, toHex(worldName), toHex(worldSlug), worldWidth, worldHeight, pixelsPer, timer, hexPalette, Math.floor(start / 1000), Math.floor(end / 1000));
     } else {
-      await createCanvasCall(account, address as string, toHex(worldName), toHex(worldSlug), getCompetitionWidth(), getCompetitionHeight(), getCompetitionPixelsPer(), getCompetitionTimer(), hexPalette, Math.floor(getCompetitionStart() / 1000), Math.floor(getCompetitionEnd() / 1000));
+      await createCanvas(address as string, toHex(worldName), toHex(worldSlug), getCompetitionWidth(), getCompetitionHeight(), getCompetitionPixelsPer(), getCompetitionTimer(), hexPalette, Math.floor(getCompetitionStart() / 1000), Math.floor(getCompetitionEnd() / 1000));
     }
   };
 

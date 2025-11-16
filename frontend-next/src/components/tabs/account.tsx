@@ -7,6 +7,7 @@ import {
   useZtarknetConnect,
   useZtarknetCreate,
 } from "@/contract/WalletConnector";
+import { useZtarknetConnector } from "@/context/ZtarknetConnector";
 import { BasicTab } from "./basic";
 import {
   getLeaderboardPixelsUser,
@@ -32,8 +33,8 @@ export const AccountTab = (props: any) => {
   const { disconnect } = useDisconnect();
   const { connect, getAvailableKeys, getPrivateKey, clearPrivateKey, clearPrivateKeys, setFundingCallback, getBalance } = useZtarknetConnect();
   const { createAccount } = useZtarknetCreate();
+  const { username: ztarknetUsername, claimUsername, isUsernameClaimed } = useZtarknetConnector();
 
-  const [username, setUsername] = useState<string>("");
   const [addressShort, setAddressShort] = useState<string>();
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [availableAccounts, setAvailableAccounts] = useState<string[]>([]);
@@ -43,6 +44,12 @@ export const AccountTab = (props: any) => {
   const [fundingAddress, setFundingAddress] = useState<string>("");
   const [fundingResolve, setFundingResolve] = useState<(() => void) | null>(null);
   const [fundingReject, setFundingReject] = useState<((reason?: any) => void) | null>(null);
+
+  // Username claiming states
+  const [showUsernameClaim, setShowUsernameClaim] = useState(false);
+  const [usernameInput, setUsernameInput] = useState<string>("");
+  const [isClaimingUsername, setIsClaimingUsername] = useState(false);
+  const [usernameError, setUsernameError] = useState<string>("");
 
   // Create funding callback using useCallback to avoid recreating on every render
   const fundingCallback = useCallback((accountAddress: string): Promise<void> => {
@@ -75,12 +82,57 @@ export const AccountTab = (props: any) => {
 
   useEffect(() => {
     if (!address) return;
-
-    // TODO: ZTARKNET: Get username from Ztarknet service
-    // For now, just show shortened address
-    setUsername("N/A");
     setAddressShort(`${address.slice(0, 6)}...${address.slice(-4)}`);
   }, [address]);
+
+  // Handle username claim
+  const handleClaimUsername = async () => {
+    if (!usernameInput || usernameInput.trim() === "") {
+      setUsernameError("Username cannot be empty");
+      return;
+    }
+
+    // Validate username format (a-z, 0-9, -, _)
+    const usernameRegex = /^[a-z0-9_-]+$/;
+    if (!usernameRegex.test(usernameInput)) {
+      setUsernameError("Username can only contain lowercase letters, numbers, hyphens, and underscores");
+      return;
+    }
+
+    if (usernameInput.length > 31) {
+      setUsernameError("Username must be 31 characters or less");
+      return;
+    }
+
+    setIsClaimingUsername(true);
+    setUsernameError("");
+
+    try {
+      // Check if username is already taken
+      const isTaken = await isUsernameClaimed(usernameInput);
+      if (isTaken) {
+        setUsernameError("Username is already taken");
+        setIsClaimingUsername(false);
+        return;
+      }
+
+      // Claim the username
+      const txHash = await claimUsername(usernameInput);
+      if (txHash) {
+        console.log("Username claimed successfully:", txHash);
+        setShowUsernameClaim(false);
+        setUsernameInput("");
+        playSoftClick2();
+      } else {
+        setUsernameError("Failed to claim username. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error claiming username:", error);
+      setUsernameError("Failed to claim username. Please try again.");
+    } finally {
+      setIsClaimingUsername(false);
+    }
+  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -316,10 +368,65 @@ export const AccountTab = (props: any) => {
           </div>
           <div className="px-[0.5rem] mx-[0.5rem] mt-[1rem] flex flex-row align-center justify-between">
             <p className="Text__medium pr-[1rem]">Username:</p>
-            <p className="Text__medium pr-[0.5rem] truncate w-[21rem] text-right">
-              {username}
-            </p>
+            <div className="flex flex-row align-center gap-[0.5rem]">
+              <p className="Text__medium pr-[0.5rem] truncate w-[15rem] text-right">
+                {ztarknetUsername || "Not set"}
+              </p>
+              {!ztarknetUsername && !showUsernameClaim && (
+                <button
+                  className="px-[0.5rem] py-[0.2rem] Text__small Button__primary"
+                  onClick={() => {
+                    playSoftClick2();
+                    setShowUsernameClaim(true);
+                  }}
+                >
+                  Claim
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* Username Claim Form */}
+          {showUsernameClaim && (
+            <div className="px-[0.5rem] mx-[0.5rem] mt-[1rem] p-[1rem] border-2 border-black bg-gray-100">
+              <h3 className="Text__large mb-[0.5rem]">Claim Username</h3>
+              <input
+                type="text"
+                value={usernameInput}
+                onChange={(e) => setUsernameInput(e.target.value.toLowerCase())}
+                placeholder="Enter username"
+                className="w-full p-[0.5rem] border-2 border-black Text__medium mb-[0.5rem]"
+                disabled={isClaimingUsername}
+              />
+              {usernameError && (
+                <p className="Text__small text-red-600 mb-[0.5rem]">{usernameError}</p>
+              )}
+              <p className="Text__small text-gray-600 mb-[0.5rem]">
+                Only lowercase letters, numbers, hyphens, and underscores allowed (max 31 characters)
+              </p>
+              <div className="flex flex-row gap-[0.5rem]">
+                <button
+                  className="flex-1 px-[0.5rem] py-[0.5rem] Text__medium Button__primary"
+                  onClick={handleClaimUsername}
+                  disabled={isClaimingUsername}
+                >
+                  {isClaimingUsername ? "Claiming..." : "Claim"}
+                </button>
+                <button
+                  className="flex-1 px-[0.5rem] py-[0.5rem] Text__medium Button__primary"
+                  onClick={() => {
+                    playSoftClick2();
+                    setShowUsernameClaim(false);
+                    setUsernameInput("");
+                    setUsernameError("");
+                  }}
+                  disabled={isClaimingUsername}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
           <div className="px-[0.5rem] mx-[0.5rem] mt-[1rem] flex flex-row align-center justify-between">
             <p className="Text__medium pr-[1rem]">Address&nbsp;:</p>
             <div className="flex flex-row align-center flex-grow">

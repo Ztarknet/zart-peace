@@ -1,15 +1,14 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useZtarknetConnector } from '@/context/ZtarknetConnector';
 import { BasicTab } from "./basic";
 import { getLeaderboardPixels, getLeaderboardWorlds, getLeaderboardPixelsWorld } from "../../api/stats";
 import copyIcon from "../../../public/icons/copy.png";
 import { PaginationView } from "../utils/pagination";
 import { playSoftClick2 } from "../utils/sounds";
 
-// TODO: ZTARKNET: Replace lookupAddresses with Ztarknet username lookup
-// import { lookupAddresses } from '@cartridge/controller';
-
 export const LeaderboardTab = (props: any) => {
+  const { getUsernamesForAddresses } = useZtarknetConnector();
   const getLeaderboardTitle = () => {
     const hasCustomCutoff = process.env.NEXT_PUBLIC_LEADERBOARD_CUTOFF;
     return hasCustomCutoff ? "Leaderboard" : "Today's Leaderboard";
@@ -74,26 +73,23 @@ export const LeaderboardTab = (props: any) => {
         const newKeyNameMap = keyNameMap;
         const keysList = res.map((stat: any) => "0x" + stat.key);
 
-        // TODO: ZTARKNET: Replace with Ztarknet username lookup
-        // let usernameMap: Map<string, string> = new Map();
-        // if (selectedOption.name !== "Worlds") {
-        //   usernameMap = await ztarknetSDK.lookupUsernames(keysList);
-        // }
+        // Get usernames from contract for player leaderboards
+        let usernameMap: Map<string, string> = new Map();
+        if (selectedOption.name !== "Worlds") {
+          usernameMap = await getUsernamesForAddresses(keysList);
+        }
 
         if (res && res.length !== 0) {
           res.forEach((stat: any) => {
             // Remove all 0s from the start of stat.key
             const unpaddedKey = "0x" + stat.key.replace(/^0+/, '');
 
-            // TODO: ZTARKNET: Use username lookup when available
-            // if (selectedOption.name !== "Worlds" && usernameMap.has(unpaddedKey)) {
-            //   newKeyNameMap[stat.key] = usernameMap.get(unpaddedKey);
-            // } else {
-            //   newKeyNameMap[stat.key] = "0x" + stat.key.slice(0, 4) + "..." + stat.key.slice(-4);
-            // }
-
-            // Temporary: just show shortened address
-            newKeyNameMap[stat.key] = "0x" + stat.key.slice(0, 4) + "..." + stat.key.slice(-4);
+            // Use username if available, otherwise show shortened address
+            if (selectedOption.name !== "Worlds" && usernameMap.has(unpaddedKey)) {
+              newKeyNameMap[stat.key] = usernameMap.get(unpaddedKey);
+            } else {
+              newKeyNameMap[stat.key] = "0x" + stat.key.slice(0, 4) + "..." + stat.key.slice(-4);
+            }
           });
         }
         setKeyNameMap(newKeyNameMap);
@@ -119,7 +115,7 @@ export const LeaderboardTab = (props: any) => {
       }
     }
     fetchLeaderboard();
-  }, [leaderboardPagination]);
+  }, [leaderboardPagination, getUsernamesForAddresses]);
   useEffect(() => {
     setLeaderboardPagination({ page: 1, pageLength: 16 });
   }, [selectedOption, props.activeWorld]);

@@ -1,4 +1,6 @@
-use core::starknet::{ContractAddress};
+use core::starknet::{ContractAddress, ClassHash};
+use openzeppelin::upgrades::UpgradeableComponent;
+use openzeppelin::upgrades::interface::IUpgradeable;
 
 #[starknet::interface]
 pub trait IMultiCanvas<TContractState> {
@@ -77,11 +79,20 @@ pub trait IMultiCanvas<TContractState> {
     fn place_pixel_xy(
         ref self: TContractState, canvas_id: u32, x: u128, y: u128, color: u8, now: u64
     );
+
+    // Username management
+    fn get_username(self: @TContractState, user: ContractAddress) -> felt252;
+    fn get_usernames(self: @TContractState, users: Span<ContractAddress>) -> Span<felt252>;
+    fn claim_username(ref self: TContractState, username: felt252);
+    fn is_username_claimed(self: @TContractState, username: felt252) -> bool;
 }
 
 #[starknet::contract]
 pub mod MultiCanvas {
-    use core::starknet::{get_caller_address, ContractAddress};
+    use core::starknet::{get_caller_address, ContractAddress, ClassHash, get_contract_address};
+    use core::num::traits::Zero;
+    use openzeppelin::upgrades::UpgradeableComponent;
+    use openzeppelin::upgrades::interface::IUpgradeable;
 
     const DEFAULT_MIN_COLOR_COUNT: u32 = 2;
     const DEFAULT_MAX_COLOR_COUNT: u32 = 25;
@@ -89,6 +100,10 @@ pub mod MultiCanvas {
     const DEFAULT_MAX_SIZE: u128 = 1024;
     const DEFAULT_MIN_STENCIL_SIZE: u128 = 5;
     const DEFAULT_MAX_STENCIL_SIZE: u128 = 256;
+
+    // Components
+    component!(path: UpgradeableComponent, storage: upgradeable, event: UpgradeableEvent);
+    impl UpgradeableInternalImpl = UpgradeableComponent::InternalImpl<ContractState>;
 
     #[derive(Drop, Serde)]
     pub struct GameBounds {
@@ -134,6 +149,9 @@ pub mod MultiCanvas {
 
     #[storage]
     struct Storage {
+        // Components
+        #[substorage(v0)]
+        upgradeable: UpgradeableComponent::Storage,
         // Game Configuration
         game_master: ContractAddress,
         awards_enabled: bool,
@@ -176,11 +194,18 @@ pub mod MultiCanvas {
         canvas_favorites: LegacyMap::<(u32, ContractAddress), bool>,
         // Maps: (canvas_id, stencil_id, user addr) -> if favorited
         stencil_favorites: LegacyMap::<(u32, u32, ContractAddress), bool>,
+        // Username Data
+        // Map: user address -> username
+        usernames: LegacyMap::<ContractAddress, felt252>,
+        // Map: username -> user address (owner)
+        username_owners: LegacyMap::<felt252, ContractAddress>,
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
+        #[flat]
+        UpgradeableEvent: UpgradeableComponent::Event,
         CanvasCreated: CanvasCreated,
         CanvasHostChanged: CanvasHostChanged,
         CanvasPixelsPerTimeChanged: CanvasPixelsPerTimeChanged,
@@ -198,6 +223,7 @@ pub mod MultiCanvas {
         StencilRemoved: StencilRemoved,
         StencilFavorited: StencilFavorited,
         StencilUnfavorited: StencilUnfavorited,
+        UsernameClaimed: UsernameClaimed,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -346,6 +372,13 @@ pub mod MultiCanvas {
         pub stencil_id: u32,
         #[key]
         pub user: ContractAddress,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    pub struct UsernameClaimed {
+        #[key]
+        pub user: ContractAddress,
+        pub username: felt252,
     }
 
     #[constructor]
@@ -802,6 +835,46 @@ pub mod MultiCanvas {
             }
             self.stencil_favorites.write((canvas_id, stencil_id, caller), false);
             self.emit(StencilUnfavorited { canvas_id, stencil_id, user: caller });
+        }
+
+        fn get_username(self: @ContractState, user: ContractAddress) -> felt252 {
+            self.usernames.read(user)
+        }
+
+        fn get_usernames(self: @ContractState, users: Span<ContractAddress>) -> Span<felt252> {
+            let mut usernames = array![];
+            let mut i = 0;
+            while i < users.len() {
+                usernames.append(self.usernames.read(*users.at(i)));
+                i += 1;
+            };
+            usernames.span()
+        }
+
+        fn claim_username(ref self: ContractState, username: felt252) {
+            let caller = get_caller_address();
+            let current_username = self.usernames.read(caller);
+            assert(current_username == 0, 'Username already claimed');
+            let owner = self.username_owners.read(username);
+            assert(owner == Zero::zero(), 'Username already taken');
+
+            self.usernames.write(caller, username);
+            self.username_owners.write(username, caller);
+            self.emit(UsernameClaimed { user: caller, username });
+        }
+
+        fn is_username_claimed(self: @ContractState, username: felt252) -> bool {
+            let owner = self.username_owners.read(username);
+            owner != Zero::zero()
+        }
+    }
+
+    #[abi(embed_v0)]
+    impl UpgradeableImpl of IUpgradeable<ContractState> {
+        fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
+            let caller = get_caller_address();
+            assert(caller == self.game_master.read(), 'Only game master can upgrade');
+            self.upgradeable._upgrade(new_class_hash);
         }
     }
 

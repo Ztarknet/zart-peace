@@ -2,19 +2,17 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { CSSTransition } from "react-transition-group";
 import { useAccount } from '@/contract/WalletConnector';
+import { useZtarknetConnector } from '@/context/ZtarknetConnector';
 import FavoriteIcon from "../../../public/icons/Favorite.png";
 import FavoritedIcon from "../../../public/icons/Favorited.png";
 import Info from "../../../public/icons/Info.png";
 import bot from "../../../public/icons/bot.png";
 import { playSoftClick2 } from "../utils/sounds";
-import { favoriteStencilCall, unfavoriteStencilCall } from "../../contract/calls";
 import { getStencilOwner } from "../../api/stencils";
 
-// TODO: ZTARKNET: Replace lookupAddresses with Ztarknet username lookup
-// import { lookupAddresses } from '@cartridge/controller';
-
 export const StencilItem = (props: any) => {
-  const { account, address } = useAccount();
+  const { address } = useAccount();
+  const { getUsernameForAddress, favoriteStencil, unfavoriteStencil } = useZtarknetConnector();
 
   const [showInfo, setShowInfo] = useState(false);
   const [creatorText, setCreatorText] = useState("...");
@@ -24,19 +22,17 @@ export const StencilItem = (props: any) => {
       if (creatorText !== "...") return;
       const creator = await getStencilOwner(props.stencil.stencilId, props.activeWorld.worldId);
 
-      // TODO: ZTARKNET: Replace with Ztarknet username lookup
-      // const username = await ztarknetSDK.lookupUsername("0x" + creator);
-      // if (username) {
-      //   setCreatorText(username);
-      // } else {
-      //   setCreatorText(`0x${creator.slice(0, 6)}...${creator.slice(-4)}`);
-      // }
-
-      // Temporary fallback: just show shortened address
-      setCreatorText(`0x${creator.slice(0, 6)}...${creator.slice(-4)}`);
+      // Get username from contract
+      const creatorAddress = "0x" + creator;
+      const username = await getUsernameForAddress(creatorAddress);
+      if (username) {
+        setCreatorText(username);
+      } else {
+        setCreatorText(`0x${creator.slice(0, 6)}...${creator.slice(-4)}`);
+      }
     };
     getCreator();
-  }, [showInfo]);
+  }, [showInfo, getUsernameForAddress, creatorText, props.stencil.stencilId, props.activeWorld.worldId]);
 
   const selectStencil = (e: any) => {
     e.preventDefault();
@@ -77,10 +73,10 @@ export const StencilItem = (props: any) => {
   const handleFavoritePress = async () => {
     playSoftClick2();
     if (props.stencil.favorited) {
-      await unfavoriteStencilCall(account, props.activeWorld.worldId, props.stencil.stencilId);
+      await unfavoriteStencil(props.activeWorld.worldId, props.stencil.stencilId);
       props.setStencilFavorited(props.stencil.stencilId, false);
     } else {
-      await favoriteStencilCall(account, props.activeWorld.worldId, props.stencil.stencilId);
+      await favoriteStencil(props.activeWorld.worldId, props.stencil.stencilId);
       props.setStencilFavorited(props.stencil.stencilId, true);
     }
   }

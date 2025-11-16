@@ -13,10 +13,12 @@ export const useAccount = () => {
 
           // Use invokeContractCalls for multiple calls, invokeContract for single call
           if (callsArray.length === 1) {
-            const response = await account.execute(callsArray[0]);
+            const nonce = await account.getNonce("pre_confirmed");
+            const response = await account.execute(callsArray[0], { skipValidate: true, nonce });
             return { transaction_hash: response.transaction_hash };
           } else {
-            const response = await account.execute(callsArray);
+            const nonce = await account.getNonce("pre_confirmed");
+            const response = await account.execute(callsArray, { skipValidate: true, nonce });
             return { transaction_hash: response.transaction_hash };
           }
         },

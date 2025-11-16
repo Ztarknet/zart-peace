@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useAccount } from "@/contract/WalletConnector";
+import { useZtarknetConnector } from "@/context/ZtarknetConnector";
 import { getCanvas, getCanvasColors } from "../../api/canvas";
-import { placePixelCall } from "../../contract/calls";
 import { playSoftClick, playPixelPlaced2 } from "../utils/sounds";
 import "./canvas.css";
 
 export const Canva = (props: any) => {
   const { account } = useAccount();
+  const { placePixel } = useZtarknetConnector();
   const [colors, setColors] = useState([] as string[]);
   const [canvasUpdater, setCanvasUpdater] = useState(0);
   useEffect(() => {
@@ -180,8 +181,7 @@ export const Canva = (props: any) => {
 
     props.setSelectedColorId(-1);
     colorPixel(x, y, colorId);
-    await placePixelCall(
-      account,
+    await placePixel(
       props.worldId,
       position,
       colorId,

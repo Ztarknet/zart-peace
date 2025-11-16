@@ -20,6 +20,7 @@ interface ZtarknetConnectorContextType {
   address: string | null;
   isConnected: boolean;
   provider: RpcProvider | null;
+  username: string | null;
 
   // Account management
   createAccount: () => Promise<{ address: string; privateKey: string }>;
@@ -40,9 +41,24 @@ interface ZtarknetConnectorContextType {
   invokeContract: (call: Call) => Promise<InvokeFunctionResponse>;
   invokeContractCalls: (calls: Call[]) => Promise<InvokeFunctionResponse>;
 
+  // Username management
+  getUsernameForAddress: (userAddress: string) => Promise<string | null>;
+  getUsernamesForAddresses: (userAddresses: string[]) => Promise<Map<string, string>>;
+  claimUsername: (username: string) => Promise<string | null>;
+  isUsernameClaimed: (username: string) => Promise<boolean>;
+  refreshUsername: () => Promise<void>;
+
   // Utility
   deployAccount: (privateKey: string, accountAddress: string) => Promise<string>;
   getBalance: (accountAddress: string, tokenAddress?: string) => Promise<bigint>;
+
+  // Canvas contract calls
+  placePixel: (worldId: number, position: number, colorId: number, now: number) => Promise<string | null>;
+  placePixels: (worldId: number, pixels: Array<{ position: number; colorId: number }>, now: number) => Promise<string | null>;
+  createCanvas: (host: string, name: string, unique_name: string, width: number, height: number, pixels_per_time: number, timer: number, color_palette: string[], start_time: number, end_time: number) => Promise<string | null>;
+  addStencil: (worldId: number, hash: string, width: number, height: number, position: number) => Promise<string | null>;
+  favoriteStencil: (worldId: number, stencilId: number) => Promise<string | null>;
+  unfavoriteStencil: (worldId: number, stencilId: number) => Promise<string | null>;
 }
 
 const ZtarknetConnectorContext = createContext<ZtarknetConnectorContextType | undefined>(
@@ -63,6 +79,7 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
   const [account, setAccount] = useState<Account | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [provider, setProvider] = useState<RpcProvider | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const fundingCallbackRef = React.useRef<((address: string) => Promise<void>) | null>(null);
 
   // Initialize provider
@@ -276,6 +293,211 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
     }
   }, [provider, initializeProvider]);
 
+  // Canvas contract ABI for username functions
+  const USERNAME_ABI = [
+    {
+      name: "get_username",
+      type: "function",
+      inputs: [
+        {
+          name: "user",
+          type: "core::starknet::contract_address::ContractAddress",
+        },
+      ],
+      outputs: [{ type: "core::felt252" }],
+      state_mutability: "view",
+    },
+    {
+      name: "get_usernames",
+      type: "function",
+      inputs: [
+        {
+          name: "users",
+          type: "core::array::Span::<core::starknet::contract_address::ContractAddress>",
+        },
+      ],
+      outputs: [{ type: "core::array::Span::<core::felt252>" }],
+      state_mutability: "view",
+    },
+    {
+      name: "claim_username",
+      type: "function",
+      inputs: [
+        {
+          name: "username",
+          type: "core::felt252",
+        },
+      ],
+      outputs: [],
+      state_mutability: "external",
+    },
+    {
+      name: "is_username_claimed",
+      type: "function",
+      inputs: [
+        {
+          name: "username",
+          type: "core::felt252",
+        },
+      ],
+      outputs: [{ type: "core::bool" }],
+      state_mutability: "view",
+    },
+  ];
+
+  // Helper function to convert felt252 to string
+  const felt252ToString = (felt: bigint): string => {
+    if (!felt || felt === BigInt(0)) return "";
+
+    let str = "";
+    let num = felt;
+    while (num > BigInt(0)) {
+      const char = Number(num % BigInt(256));
+      if (char === 0) break;
+      str = String.fromCharCode(char) + str;
+      num = num / BigInt(256);
+    }
+    return str;
+  };
+
+  // Helper function to convert string to felt252
+  const stringToFelt252 = (str: string): string => {
+    if (!str) return "0x0";
+
+    let felt = BigInt(0);
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      felt = felt * BigInt(256) + BigInt(char);
+    }
+    return "0x" + felt.toString(16);
+  };
+
+  const getUsernameForAddress = useCallback(async (userAddress: string): Promise<string | null> => {
+    try {
+      const currentProvider = provider || initializeProvider();
+
+      const canvasContract = new Contract({
+        abi: USERNAME_ABI,
+        address: CANVAS_CONTRACT_ADDRESS,
+        providerOrAccount: currentProvider,
+      });
+
+      const usernameFelt = await canvasContract.get_username(userAddress);
+      const usernameStr = felt252ToString(BigInt(usernameFelt));
+
+      return usernameStr || null;
+    } catch (error) {
+      console.error("Failed to get username:", error);
+      return null;
+    }
+  }, [provider, initializeProvider]);
+
+  const getUsernamesForAddresses = useCallback(async (userAddresses: string[]): Promise<Map<string, string>> => {
+    const usernameMap = new Map<string, string>();
+
+    if (userAddresses.length === 0) {
+      return usernameMap;
+    }
+
+    try {
+      const currentProvider = provider || initializeProvider();
+
+      const canvasContract = new Contract({
+        abi: USERNAME_ABI,
+        address: CANVAS_CONTRACT_ADDRESS,
+        providerOrAccount: currentProvider,
+      });
+
+      const usernamesFelt = await canvasContract.get_usernames(userAddresses);
+
+      // Convert felt252 array to strings and create map
+      for (let i = 0; i < userAddresses.length; i++) {
+        const usernameFelt = usernamesFelt[i];
+        const usernameStr = felt252ToString(BigInt(usernameFelt));
+        if (usernameStr) {
+          usernameMap.set(userAddresses[i], usernameStr);
+        }
+      }
+
+      return usernameMap;
+    } catch (error) {
+      console.error("Failed to get usernames:", error);
+      return usernameMap;
+    }
+  }, [provider, initializeProvider]);
+
+  const claimUsername = useCallback(async (usernameStr: string): Promise<string | null> => {
+    if (!account) {
+      throw new Error("No account connected");
+    }
+
+    try {
+      const usernameFelt = stringToFelt252(usernameStr);
+
+      console.log("Claiming username:", usernameStr, "as felt:", usernameFelt);
+
+      const response = await account.execute([
+        {
+          contractAddress: CANVAS_CONTRACT_ADDRESS,
+          entrypoint: "claim_username",
+          calldata: [usernameFelt],
+        },
+      ]);
+
+      console.log("Username claim transaction hash:", response.transaction_hash);
+
+      // Wait for transaction confirmation
+      if (provider) {
+        await provider.waitForTransaction(response.transaction_hash, {
+          retryInterval: 100,
+        });
+      }
+
+      // Update local username state
+      setUsername(usernameStr);
+
+      return response.transaction_hash;
+    } catch (error) {
+      console.error("Failed to claim username:", error);
+      return null;
+    }
+  }, [account, provider]);
+
+  const isUsernameClaimed = useCallback(async (usernameStr: string): Promise<boolean> => {
+    try {
+      const currentProvider = provider || initializeProvider();
+      const usernameFelt = stringToFelt252(usernameStr);
+
+      const canvasContract = new Contract({
+        abi: USERNAME_ABI,
+        address: CANVAS_CONTRACT_ADDRESS,
+        providerOrAccount: currentProvider,
+      });
+
+      const isClaimed = await canvasContract.is_username_claimed(usernameFelt);
+
+      return Boolean(isClaimed);
+    } catch (error) {
+      console.error("Failed to check username:", error);
+      return false;
+    }
+  }, [provider, initializeProvider]);
+
+  const refreshUsername = useCallback(async (): Promise<void> => {
+    if (!address) {
+      setUsername(null);
+      return;
+    }
+
+    try {
+      const usernameStr = await getUsernameForAddress(address);
+      setUsername(usernameStr);
+    } catch (error) {
+      console.error("Failed to refresh username:", error);
+      setUsername(null);
+    }
+  }, [address, getUsernameForAddress]);
+
   const setFundingCallback = useCallback((callback: ((address: string) => Promise<void>) | null) => {
     fundingCallbackRef.current = callback;
   }, []);
@@ -460,21 +682,24 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
       try {
         console.log("Invoking contract:", call);
 
-        // Get nonce explicitly
-        const nonce = await account.getNonce("pre_confirmed");
+        if (!provider) {
+          throw new Error("Provider not initialized");
+        }
 
+        const nonce = await provider.getNonceForAddress(account.address, "pre_confirmed");
+        // nonce ? (BigInt(nonce) + BigInt(1)).toString() : await provider.getNonceForAddress(account.address, "pre_confirmed");
+        console.log("Using nonce:", nonce);
         const response = await account.execute(call, {
-          nonce,
+          nonce: nonce,
+          skipValidate: true,
         });
 
         console.log("Transaction hash:", response.transaction_hash);
 
         // Wait for transaction confirmation
-        if (provider) {
-          await provider.waitForTransaction(response.transaction_hash, {
-            retryInterval: 100,
-          });
-        }
+        await provider.waitForTransaction(response.transaction_hash, {
+          retryInterval: 100,
+        });
 
         return response;
       } catch (error) {
@@ -495,21 +720,24 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
       try {
         console.log("Invoking multiple contract calls:", calls.length);
 
-        // Get nonce explicitly
-        const nonce = await account.getNonce("pre_confirmed");
+        if (!provider) {
+          throw new Error("Provider not initialized");
+        }
 
+        const nonce = await provider.getNonceForAddress(account.address, "pre_confirmed");
+        // nonce ? (BigInt(nonce) + BigInt(1)).toString() : await provider.getNonceForAddress(account.address, "pre_confirmed");
+        console.log("Using nonce:", nonce);
         const response = await account.execute(calls, {
-          nonce,
+          nonce: nonce,
+          skipValidate: true,
         });
 
         console.log("Transaction hash:", response.transaction_hash);
 
         // Wait for transaction confirmation
-        if (provider) {
-          await provider.waitForTransaction(response.transaction_hash, {
-            retryInterval: 100,
-          });
-        }
+        await provider.waitForTransaction(response.transaction_hash, {
+          retryInterval: 100,
+        });
 
         return response;
       } catch (error) {
@@ -519,6 +747,197 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
     },
     [account, provider]
   );
+
+  // ==================== Canvas Contract Calls ====================
+
+  const placePixel = useCallback(
+    async (worldId: number, position: number, colorId: number, now: number): Promise<string | null> => {
+      if (!account) {
+        console.error("Account not connected");
+        return null;
+      }
+
+      try {
+        const calldata = [worldId, position, colorId, now];
+        console.log("Placing pixel:", { worldId, position, colorId, now });
+
+        const response = await invokeContract({
+          contractAddress: CANVAS_CONTRACT_ADDRESS,
+          entrypoint: "place_pixel",
+          calldata,
+        });
+
+        console.log("Pixel placed, tx hash:", response.transaction_hash);
+        return response.transaction_hash;
+      } catch (error) {
+        console.error("Failed to place pixel:", error);
+        return null;
+      }
+    },
+    [account, invokeContract]
+  );
+
+  const placePixels = useCallback(
+    async (worldId: number, pixels: Array<{ position: number; colorId: number }>, now: number): Promise<string | null> => {
+      if (!account) {
+        console.error("Account not connected");
+        return null;
+      }
+
+      try {
+        const pixel_positions = pixels.map(p => p.position);
+        const pixel_colors = pixels.map(p => p.colorId);
+        const calldata = [worldId, pixels.length, ...pixel_positions, pixels.length, ...pixel_colors, now];
+
+        console.log("Placing pixels:", { worldId, count: pixels.length, now });
+
+        const response = await invokeContract({
+          contractAddress: CANVAS_CONTRACT_ADDRESS,
+          entrypoint: "place_pixels",
+          calldata,
+        });
+
+        console.log("Pixels placed, tx hash:", response.transaction_hash);
+        return response.transaction_hash;
+      } catch (error) {
+        console.error("Failed to place pixels:", error);
+        return null;
+      }
+    },
+    [account, invokeContract]
+  );
+
+  const createCanvas = useCallback(
+    async (
+      host: string,
+      name: string,
+      unique_name: string,
+      width: number,
+      height: number,
+      pixels_per_time: number,
+      timer: number,
+      color_palette: string[],
+      start_time: number,
+      end_time: number
+    ): Promise<string | null> => {
+      if (!account) {
+        console.error("Account not connected");
+        return null;
+      }
+
+      try {
+        const calldata = [host, name, unique_name, width, height, pixels_per_time, timer, color_palette.length, ...color_palette, start_time, end_time];
+
+        console.log("Creating canvas:", { name, unique_name, width, height });
+
+        const response = await invokeContract({
+          contractAddress: CANVAS_CONTRACT_ADDRESS,
+          entrypoint: "create_canvas",
+          calldata,
+        });
+
+        console.log("Canvas created, tx hash:", response.transaction_hash);
+        return response.transaction_hash;
+      } catch (error) {
+        console.error("Failed to create canvas:", error);
+        return null;
+      }
+    },
+    [account, invokeContract]
+  );
+
+  const addStencil = useCallback(
+    async (worldId: number, hash: string, width: number, height: number, position: number): Promise<string | null> => {
+      if (!account) {
+        console.error("Account not connected");
+        return null;
+      }
+
+      try {
+        const calldata = [worldId, hash, width, height, position];
+
+        console.log("Adding stencil:", { worldId, hash, width, height, position });
+
+        const response = await invokeContract({
+          contractAddress: CANVAS_CONTRACT_ADDRESS,
+          entrypoint: "add_stencil",
+          calldata,
+        });
+
+        console.log("Stencil added, tx hash:", response.transaction_hash);
+        return response.transaction_hash;
+      } catch (error) {
+        console.error("Failed to add stencil:", error);
+        return null;
+      }
+    },
+    [account, invokeContract]
+  );
+
+  const favoriteStencil = useCallback(
+    async (worldId: number, stencilId: number): Promise<string | null> => {
+      if (!account) {
+        console.error("Account not connected");
+        return null;
+      }
+
+      try {
+        const calldata = [worldId, stencilId];
+
+        console.log("Favoriting stencil:", { worldId, stencilId });
+
+        const response = await invokeContract({
+          contractAddress: CANVAS_CONTRACT_ADDRESS,
+          entrypoint: "favorite_stencil",
+          calldata,
+        });
+
+        console.log("Stencil favorited, tx hash:", response.transaction_hash);
+        return response.transaction_hash;
+      } catch (error) {
+        console.error("Failed to favorite stencil:", error);
+        return null;
+      }
+    },
+    [account, invokeContract]
+  );
+
+  const unfavoriteStencil = useCallback(
+    async (worldId: number, stencilId: number): Promise<string | null> => {
+      if (!account) {
+        console.error("Account not connected");
+        return null;
+      }
+
+      try {
+        const calldata = [worldId, stencilId];
+
+        console.log("Unfavoriting stencil:", { worldId, stencilId });
+
+        const response = await invokeContract({
+          contractAddress: CANVAS_CONTRACT_ADDRESS,
+          entrypoint: "unfavorite_stencil",
+          calldata,
+        });
+
+        console.log("Stencil unfavorited, tx hash:", response.transaction_hash);
+        return response.transaction_hash;
+      } catch (error) {
+        console.error("Failed to unfavorite stencil:", error);
+        return null;
+      }
+    },
+    [account, invokeContract]
+  );
+
+  // Refresh username when address changes
+  useEffect(() => {
+    if (address) {
+      refreshUsername();
+    } else {
+      setUsername(null);
+    }
+  }, [address, refreshUsername]);
 
   // Auto-connect on app load if there's an existing account
   useEffect(() => {
@@ -548,6 +967,7 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
     address,
     isConnected: !!account && !!address,
     provider,
+    username,
     mintFunds,
     createAccount,
     connectStorageAccount,
@@ -561,8 +981,19 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
     disconnectAccount,
     invokeContract,
     invokeContractCalls,
+    getUsernameForAddress,
+    getUsernamesForAddresses,
+    claimUsername,
+    isUsernameClaimed,
+    refreshUsername,
     deployAccount,
     getBalance,
+    placePixel,
+    placePixels,
+    createCanvas,
+    addStencil,
+    favoriteStencil,
+    unfavoriteStencil,
   };
 
   return (

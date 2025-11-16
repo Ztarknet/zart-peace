@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { AccountInterface } from 'starknet';
 import { useAccount } from '@/contract/WalletConnector';
+import { useZtarknetConnector } from '@/context/ZtarknetConnector';
 import { CanvasController } from '../components/canvas/controller';
 import { useLockScroll } from '../app/window';
 import { TabPanel } from "../components/tabs/panel";
@@ -11,11 +12,11 @@ import { Footer } from "../components/footer/footer";
 import { websocketUrl } from "../api/api";
 import { getWorlds, getHomeWorlds, getWorld } from "../api/worlds";
 import { getCanvasColors } from "../api/canvas";
-import { placePixelsCall } from "../contract/calls";
 import { playPixelPlaced2 } from "../components/utils/sounds";
 
 const Canvas = (props: any) => {
   const { account, chain } = useAccount();
+  const { placePixels } = useZtarknetConnector();
 
   // Game Data
   const updateInterval = 1000;
@@ -58,7 +59,7 @@ const Canvas = (props: any) => {
       const world = await getWorld(openedWorldId.toString());
       setActiveWorld(world);
       setWorldWidth(world.width);
-      setTimeBetweenPlacements(world.timeBetweenPixels * 1000);
+      setTimeBetweenPlacements(world.timeBetweenPixels * 1000 + 10000); // TODO: ZTARKNET: Added 10 second buffer for nonce issues
     };
 
     setStagingPixels([]);
@@ -171,7 +172,7 @@ const Canvas = (props: any) => {
     }
     const now = Math.floor(Date.now() / 1000);
     const commitWorldId = openedWorldId;
-    const txHash = await placePixelsCall(account, openedWorldId, stagingPixels, now + (chain === "solana" ? 60 : 0));
+    const txHash = await placePixels(openedWorldId, stagingPixels, now + (chain === "solana" ? 60 : 0));
     if (txHash && (callsCounter % checkRevertsEvery) === 0) {
       setRevertCount(0)
       didRevert(txHash);
@@ -205,7 +206,7 @@ const Canvas = (props: any) => {
       return;
     }
     const now = Math.floor(Date.now() / 1000);
-    const txHash = await placePixelsCall(account, openedWorldId, pixels, now + (chain === "solana" ? 60 : 0));
+    const txHash = await placePixels(openedWorldId, pixels, now + (chain === "solana" ? 60 : 0));
     if (txHash && (callsCounter % checkRevertsEvery) === 0) {
       setRevertCount(0)
       didRevert(txHash);

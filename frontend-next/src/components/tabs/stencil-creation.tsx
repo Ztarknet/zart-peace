@@ -1,13 +1,14 @@
 import Image from "next/image";
 import { useAccount } from '@/contract/WalletConnector';
+import { useZtarknetConnector } from '@/context/ZtarknetConnector';
 import { BasicTab } from "./basic";
 import { sha256 } from "js-sha256";
 import { playSoftClick2 } from "../utils/sounds";
 import { addStencilData } from "../../api/stencils";
-import { addStencilCall } from "../../contract/calls";
 
 export const StencilCreationTab = (props: any) => {
   const { account } = useAccount();
+  const { addStencil } = useZtarknetConnector();
   const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === "true";
 
   const hashStencilImage = () => {
@@ -50,7 +51,7 @@ export const StencilCreationTab = (props: any) => {
     
     // Normal flow with blockchain interaction
     try {
-      await addStencilCall(account, props.worldId, hash, props.stencilImage.width, props.stencilImage.height, props.stencilPosition);
+      await addStencil(props.worldId, hash, props.stencilImage.width, props.stencilImage.height, props.stencilPosition);
     } catch (error) {
       console.error("Error submitting stencil:", error);
       if (!isDevMode) return; // Only return in production mode
