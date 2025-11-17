@@ -201,6 +201,7 @@ export const GameController = (props: any) => {
           availablePixelsUsed={props.availablePixelsUsed}
           availablePixels={props.availablePixels}
           isCommitting={props.isCommitting}
+          basePixelTimer={props.basePixelTimer}
         />
       )}
       {props.botMode && props.selectedBotOption === "AI Agent" && enableAIAgent && (

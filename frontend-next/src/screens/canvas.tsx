@@ -15,7 +15,7 @@ import { getCanvasColors } from "../api/canvas";
 import { playPixelPlaced2 } from "../components/utils/sounds";
 
 const Canvas = (props: any) => {
-  const { account, chain } = useAccount();
+  const { provider, chain } = useAccount();
   const { placePixels } = useZtarknetConnector();
 
   // Game Data
@@ -59,7 +59,7 @@ const Canvas = (props: any) => {
       const world = await getWorld(openedWorldId.toString());
       setActiveWorld(world);
       setWorldWidth(world.width);
-      setTimeBetweenPlacements(world.timeBetweenPixels * 1000 + 10000); // TODO: ZTARKNET: Added 10 second buffer for nonce issues
+      setTimeBetweenPlacements(world.timeBetweenPixels * 1000);
     };
 
     setStagingPixels([]);
@@ -143,13 +143,13 @@ const Canvas = (props: any) => {
     let res = null;
     let attempts = 0;
     console.log("Checking if tx reverted...");
-    if (!transactionHash || !account) {
+    if (!transactionHash || !provider) {
       return;
     }
     while (!res && attempts < 5) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       try {
-        res = await (account as AccountInterface).getTransactionReceipt(transactionHash) as any;
+        res = await provider.getTransactionReceipt(transactionHash) as any;
       } catch (e) {
         console.log("Error checking tx:", e);
       }

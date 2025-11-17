@@ -692,6 +692,7 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
         const response = await account.execute(call, {
           nonce: nonce,
           skipValidate: true,
+          blockIdentifier: "pre_confirmed",
         });
 
         console.log("Transaction hash:", response.transaction_hash);
@@ -730,6 +731,7 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
         const response = await account.execute(calls, {
           nonce: nonce,
           skipValidate: true,
+          blockIdentifier: "pre_confirmed",
         });
 
         console.log("Transaction hash:", response.transaction_hash);
