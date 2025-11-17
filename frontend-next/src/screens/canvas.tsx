@@ -15,8 +15,8 @@ import { getCanvasColors } from "../api/canvas";
 import { playPixelPlaced2 } from "../components/utils/sounds";
 
 const Canvas = (props: any) => {
-  const { provider, chain } = useAccount();
-  const { placePixels } = useZtarknetConnector();
+  const { chain } = useAccount();
+  const { placePixels, provider } = useZtarknetConnector();
 
   // Game Data
   const updateInterval = 1000;
