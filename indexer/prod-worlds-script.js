@@ -1,6 +1,6 @@
 export const config = {
   streamUrl: Deno.env.get("APIBARA_STREAM_URL"),
-  startingBlock: 1110000,
+  startingBlock: 11000,
   network: "starknet",
   finality: "DATA_STATUS_PENDING",
   filter: {
