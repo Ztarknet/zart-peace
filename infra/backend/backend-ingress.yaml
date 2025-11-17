@@ -3,8 +3,8 @@ kind: Ingress
 metadata:
   name: backend-ingress
   annotations:
-    kubernetes.io/ingress.global-static-ip-name: art-peace-static-ip
-    networking.gke.io/managed-certificates: managed-cert
+    kubernetes.io/ingress.global-static-ip-name: zart-peace-static-ip
+    networking.gke.io/managed-certificates: zart-peace-managed-cert
     kubernetes.io/ingress.class: "gce"
 spec:
   rules:

@@ -138,7 +138,7 @@ export const FundAccountModal = ({
               <div className="flex flex-row gap-1">
                 <span className="Text__medium text-blue-500 font-bold min-w-[1.5rem]">3.</span>
                 <p className="Text__medium text-black">
-                  Click "Request STRK"
+                  Click &quot;Request STRK&quot;
                 </p>
               </div>
 

@@ -103,10 +103,10 @@ export const ZtarknetConnectorProvider: React.FC<{ children: React.ReactNode }> 
     crypto.getRandomValues(randomBytes);
   
     // Convert to hex string and ensure it starts with 0x
-    let hexString = '0x' + Array.from(randomBytes)
+    const hexString = '0x' + Array.from(randomBytes)
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
-  
+
     return hexString;
   }
 
