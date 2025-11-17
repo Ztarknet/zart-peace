@@ -1,7 +1,7 @@
 apiVersion: v2
-name: art-peace-infra
-description: Helm charts for the art/peace infrastructure
+name: zart-peace-infra
+description: Helm charts for the zart/peace infrastructure
 
 type: application
-version: 0.2.2
-appVersion: "v3.3.0"
+version: 0.1.0
+appVersion: "v0.1.0"

@@ -18,7 +18,7 @@ spec:
           command: ["./main", "--admin"]
           imagePullPolicy: Always
           ports:
-            - containerPort: {{ .Values.ports.backend }}
+            - containerPort: {{ .Values.ports.adminBackend }}
           envFrom:
             - configMapRef:
                 name: {{ .Values.labels.backend.name }}-secret

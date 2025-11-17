@@ -1,3 +1,5 @@
+namespace: art-peace-ztarknet
+
 labels:
   redis:
     name: redis
@@ -13,6 +15,8 @@ labels:
     name: websocket
   indexer:
     name: indexer
+  apibara:
+    name: apibara-dna
 
 ports:
   redis: 6379
@@ -21,6 +25,7 @@ ports:
   adminBackend: 8082
   websocket: 8083
   consumer: 8081
+  apibara: 7171
 
 volumes:
   redis:
@@ -56,6 +61,11 @@ volumes:
     claim: stencils-volume-claim
     class: standard-rwo
     storage: 50Gi
+  apibara:
+    name: apibara-data
+    claim: apibara-volume-claim
+    class: standard-rwo
+    storage: 50Gi
 
 deployments:
   sha: aabbccdd
@@ -69,21 +79,25 @@ deployments:
     tag: 14.11-alpine
   backend:
     replicas: 1
-    image: brandonjroberts/art-peace-backend
+    image: brandonjroberts/zart-peace-backend
   adminBackend:
     replicas: 1
-    image: brandonjroberts/art-peace-backend
+    image: brandonjroberts/zart-peace-backend
   consumer:
     replicas: 1
-    image: brandonjroberts/art-peace-consumer
+    image: brandonjroberts/zart-peace-consumer
   websocket:
     replicas: 1
-    image: brandonjroberts/art-peace-websocket
+    image: brandonjroberts/zart-peace-websocket
   indexer:
     replicas: 1
-    image: brandonjroberts/art-peace-indexer
+    image: brandonjroberts/zart-peace-indexer
   indexerWorlds:
-    image: brandonjroberts/art-peace-worlds-indexer
+    image: brandonjroberts/zart-peace-worlds-indexer
+  apibara:
+    replicas: 1
+    image: quay.io/apibara/starknet
+    tag: 1.7.2
 
 postgres:
   db: art-peace-db
@@ -94,17 +108,21 @@ turboda:
   apiKey: availTurboDaApiKey1234
 
 apibara:
-  streamUrl: https://mainnet.starknet.a5a.ch
-  #streamUrl: https://sepolia.starknet.a5a.ch
-  indexerId: art-peace-indexer-id
+  # Self-hosted DNA server configuration for ztarknet
+  rpcUrl: https://ztarknet-madara.d.karnot.xyz/rpc
+  streamName: ztarknet
+  headRefreshIntervalMs: 1000
+  # Stream URL for indexer (uses internal service)
+  # Note: This will be templated in indexer-configmap.yaml to use .Values.namespace
+  indexerId: canvas-worlds-indexer-id
   authToken: dna_aabbcc
 
 contracts:
   artPeace: 0x067883deb1c1cb60756eb6e60d500081352441a040d5039d0e4ce9fed35d68c1
   usernameStore: 0x03d9ac2a08d83dcbcf7a05358dd77e05d2b094d3c13232611fe86ee957c34d02
   nft: 0x042dbc0bbdb0faaad99d0b116d0105f9e213ac0d2faf75c878f49d69b544befb
-  host: "05bd7adfE8AfaA58300aDC72bF5584b191E236987Fe16A217b1a3e067869A0Aa"
-  end: "1727769600"
+  host: "0x58b5937b637279a5094f3d40ad5ff55d24d3f66e0ef9de6cfaccf1d2a87abc6"
+  end: "2040474000"
   roundNumber: "3"
-  canvasFactory: 0x02458a105b42db469fb1f8b35ab3ce126dab5a0881ad3c2bbf36bec0a34168c5
+  canvasFactory: 0x58ea7c38b6d250ea19afa6917570bf8c97c0ae8a3a438a29e3cc3552a51ddfa
   worldsMode: true

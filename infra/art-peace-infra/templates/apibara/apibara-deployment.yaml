@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.labels.apibara.name }}
+spec:
+  replicas: {{ .Values.deployments.apibara.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.labels.apibara.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.labels.apibara.name }}
+    spec:
+      containers:
+        - name: {{ .Values.labels.apibara.name }}
+          image: {{ .Values.deployments.apibara.image }}:{{ .Values.deployments.apibara.tag }}
+          args:
+            - "start"
+            - "--rpc={{ .Values.apibara.rpcUrl }}"
+            - "--name={{ .Values.apibara.streamName }}"
+            - "--head-refresh-interval-ms={{ .Values.apibara.headRefreshIntervalMs }}"
+            - "--wait-for-rpc"
+            - "--address=0.0.0.0:{{ .Values.ports.apibara }}"
+          ports:
+            - containerPort: {{ .Values.ports.apibara }}
+              name: grpc
+          env:
+            - name: XDG_DATA_HOME
+              value: /data
+          volumeMounts:
+            - name: {{ .Values.volumes.apibara.name }}
+              mountPath: /data
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.ports.apibara }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.ports.apibara }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: {{ .Values.volumes.apibara.name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.volumes.apibara.claim }}

@@ -26,30 +26,30 @@ docker-build:
 	$(eval COMMIT_SHA := $(shell git rev-parse --short HEAD))
 	@echo "Building docker images with version $(APP_VERSION)-$(COMMIT_SHA)"
 	@echo "Building backend..."
-	docker build . -f backend/Dockerfile.prod -t "brandonjroberts/art-peace-backend:$(APP_VERSION)-$(COMMIT_SHA)"
+	docker build . -f backend/Dockerfile.prod -t "brandonjroberts/zart-peace-backend:$(APP_VERSION)-$(COMMIT_SHA)"
 	@echo "Building consumer..."
-	docker build . -f backend/Dockerfile.consumer.prod -t "brandonjroberts/art-peace-consumer:$(APP_VERSION)-$(COMMIT_SHA)"
+	docker build . -f backend/Dockerfile.consumer.prod -t "brandonjroberts/zart-peace-consumer:$(APP_VERSION)-$(COMMIT_SHA)"
 	@echo "Building websocket..."
-	docker build . -f backend/Dockerfile.websocket.prod -t "brandonjroberts/art-peace-websocket:$(APP_VERSION)-$(COMMIT_SHA)"
+	docker build . -f backend/Dockerfile.websocket.prod -t "brandonjroberts/zart-peace-websocket:$(APP_VERSION)-$(COMMIT_SHA)"
 	@echo "Building indexer main..."	
-	docker build . -f indexer/Dockerfile.prod -t "brandonjroberts/art-peace-indexer:$(APP_VERSION)-$(COMMIT_SHA)"
+	docker build . -f indexer/Dockerfile.prod -t "brandonjroberts/zart-peace-indexer:$(APP_VERSION)-$(COMMIT_SHA)"
 	@echo "Building indexer worlds..."	
-	docker build . -f indexer/Dockerfile.worlds.prod -t "brandonjroberts/art-peace-worlds-indexer:$(APP_VERSION)-$(COMMIT_SHA)"
+	docker build . -f indexer/Dockerfile.worlds.prod -t "brandonjroberts/zart-peace-worlds-indexer:$(APP_VERSION)-$(COMMIT_SHA)"
 
 docker-push:
 	$(eval APP_VERSION := $(shell cat infra/art-peace-infra/Chart.yaml | yq eval '.appVersion' -))
 	$(eval COMMIT_SHA := $(shell git rev-parse --short HEAD))
 	@echo "Pushing docker images with version $(APP_VERSION)-$(COMMIT_SHA)"
 	@echo "Pushing backend..."
-	docker push "brandonjroberts/art-peace-backend:$(APP_VERSION)-$(COMMIT_SHA)"
+	docker push "brandonjroberts/zart-peace-backend:$(APP_VERSION)-$(COMMIT_SHA)"
 	@echo "Pushing consumer..."
-	docker push "brandonjroberts/art-peace-consumer:$(APP_VERSION)-$(COMMIT_SHA)"
+	docker push "brandonjroberts/zart-peace-consumer:$(APP_VERSION)-$(COMMIT_SHA)"
 	@echo "Pushing websocket..."
-	docker push "brandonjroberts/art-peace-websocket:$(APP_VERSION)-$(COMMIT_SHA)"
+	docker push "brandonjroberts/zart-peace-websocket:$(APP_VERSION)-$(COMMIT_SHA)"
 	@echo "Pushing indexer main..."
-	docker push "brandonjroberts/art-peace-indexer:$(APP_VERSION)-$(COMMIT_SHA)"
+	docker push "brandonjroberts/zart-peace-indexer:$(APP_VERSION)-$(COMMIT_SHA)"
 	@echo "Pushing indexer worlds..."
-	docker push "brandonjroberts/art-peace-worlds-indexer:$(APP_VERSION)-$(COMMIT_SHA)"
+	docker push "brandonjroberts/zart-peace-worlds-indexer:$(APP_VERSION)-$(COMMIT_SHA)"
 
 helm-uninstall:
 	@echo "Uninstalling helm chart..."

@@ -30,6 +30,7 @@ spec:
       volumes:
         - name: {{ .Values.volumes.nfts.name }}
           persistentVolumeClaim:
+            claimName: {{ .Values.volumes.nfts.claim }}
         - name: {{ .Values.volumes.worlds.name }}
           persistentVolumeClaim:
             claimName: {{ .Values.volumes.worlds.claim }}
