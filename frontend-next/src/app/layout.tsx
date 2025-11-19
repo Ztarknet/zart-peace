@@ -13,7 +13,7 @@ const pixelsFont = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "art/peace",
+  title: "zart/peace",
   description: "Competitive art experiment on Starknet",
 };
 

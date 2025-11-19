@@ -14,11 +14,12 @@ export const StagingPixelsTab = (props: any) => {
           {props.stagingPixels.slice(0).reverse().map((pixel: any, index: number) => (
             <div
               key={index}
-              className="w-[3rem] h-[3rem] rounded-[1rem] border-2 border-[#00000070] shadow-[0.5rem] flex-shrink-0 WorldCreation__color relative"
+              className={`w-[3rem] h-[3rem] rounded-[1rem] border-2 border-[#00000070] shadow-[0.5rem] flex-shrink-0 WorldCreation__color relative ${props.isSubmittingPixels ? 'opacity-50 pointer-events-none' : ''}`}
               style={{
                 backgroundColor: `#${props.worldColors[pixel.colorId]}FF`
               }}
               onClick={() => {
+                if (props.isSubmittingPixels) return;
                 playSoftClick2();
                 const newStagingPixels = [...props.stagingPixels];
                 newStagingPixels.splice(props.stagingPixels.length - 1 - index, 1);
@@ -30,16 +31,25 @@ export const StagingPixelsTab = (props: any) => {
           ))}
         </div>
         <div className="flex flex-row items-center justify-center gap-[0.5rem]">
-          <button className="Button__circle Text__medium size-max" onClick={() => {
-            playSoftClick2();
-            props.commitStagingPixels();
-          }}>
-            <Image alt="submit" src={check} className="w-[1.6rem] h-[1.6rem]" width={16} height={16} />
-          </button>
-          <button className="Button__circle Text__medium" onClick={() => {
-            playSoftClick2();
-            props.setStagingPixels([]);
-          }}>X</button>
+          {props.isSubmittingPixels ? (
+            <div className="w-[4.5rem] h-[3rem] flex flex-col items-center justify-center">
+              <div className="w-[1.2rem] h-[1.2rem] border-[2px] border-gray-300 border-t-black rounded-full animate-spin"></div>
+              <p className="text-[0.5rem] text-gray-600 mt-[0.15rem]">Submitting</p>
+            </div>
+          ) : (
+            <>
+              <button className="Button__circle Text__medium size-max" onClick={() => {
+                playSoftClick2();
+                props.commitStagingPixels();
+              }}>
+                <Image alt="submit" src={check} className="w-[1.6rem] h-[1.6rem]" width={16} height={16} />
+              </button>
+              <button className="Button__circle Text__medium" onClick={() => {
+                playSoftClick2();
+                props.setStagingPixels([]);
+              }}>X</button>
+            </>
+          )}
         </div>
       </div>
     </BasicTab>

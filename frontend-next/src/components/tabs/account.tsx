@@ -366,9 +366,9 @@ export const AccountTab = (props: any) => {
               {chain}
             </p>
           </div>
-          <div className="px-[0.5rem] mx-[0.5rem] mt-[1rem] flex flex-row align-center justify-between">
+          <div className="px-[0.5rem] mx-[0.5rem] mt-[1rem] flex flex-row items-center justify-between">
             <p className="Text__medium pr-[1rem]">Username:</p>
-            <div className="flex flex-row align-center gap-[0.5rem]">
+            <div className="flex flex-row items-center gap-[0.5rem]">
               <p className="Text__medium pr-[0.5rem] truncate w-[15rem] text-right">
                 {ztarknetUsername || "Not set"}
               </p>

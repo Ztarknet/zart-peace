@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useState } from "react";
 import { useAccount } from '@/contract/WalletConnector';
 import { useZtarknetConnector } from '@/context/ZtarknetConnector';
 import { BasicTab } from "./basic";
@@ -10,6 +11,7 @@ export const StencilCreationTab = (props: any) => {
   const { account } = useAccount();
   const { addStencil } = useZtarknetConnector();
   const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === "true";
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const hashStencilImage = () => {
     // TODO: Change hash to Poseidon
@@ -18,61 +20,77 @@ export const StencilCreationTab = (props: any) => {
   }
 
   const submit = async () => {
+    if (isSubmitting) return;
+
     playSoftClick2();
+    setIsSubmitting(true);
     const hash = hashStencilImage();
-    
-    if (isDevMode) {
-      // In dev mode, skip blockchain interaction if no account
-      if (!account) {
-        console.log("Dev mode: Skipping blockchain call, adding stencil to backend only");
-        const res = await addStencilData(props.worldId, props.stencilImage.width, props.stencilImage.height, props.stencilColorIds.toString());
-        console.log("Stencil added to DB:", res);
-        props.endStencilCreation();
-        props.setActiveTab("Stencils");
-        const imgHash = hash.substr(2).padStart(64, "0");
-        const newStencil = {
-          favorited: true,
-          favorites: 1,
-          hash: imgHash,
-          height: props.stencilImage.height,
-          name: "",
-          position: props.stencilPosition,
-          stencilId: res.stencilId,
-          width: props.stencilImage.width,
-          worldId: props.worldId,
-        };
-        props.setOpenedStencil(newStencil);
-        return;
-      }
-    } else {
-      // Production mode: require account
-      if (!account) return;
-    }
-    
-    // Normal flow with blockchain interaction
+
     try {
-      await addStencil(props.worldId, hash, props.stencilImage.width, props.stencilImage.height, props.stencilPosition);
+      if (isDevMode) {
+        // In dev mode, skip blockchain interaction if no account
+        if (!account) {
+          console.log("Dev mode: Skipping blockchain call, adding stencil to backend only");
+          const res = await addStencilData(props.worldId, props.stencilImage.width, props.stencilImage.height, props.stencilColorIds.toString());
+          console.log("Stencil added to DB:", res);
+          props.endStencilCreation();
+          props.setActiveTab("Stencils");
+          const imgHash = hash.substr(2).padStart(64, "0");
+          const newStencil = {
+            favorited: true,
+            favorites: 1,
+            hash: imgHash,
+            height: props.stencilImage.height,
+            name: "",
+            position: props.stencilPosition,
+            stencilId: res.stencilId,
+            width: props.stencilImage.width,
+            worldId: props.worldId,
+          };
+          props.setOpenedStencil(newStencil);
+          setIsSubmitting(false);
+          return;
+        }
+      } else {
+        // Production mode: require account
+        if (!account) {
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Normal flow with blockchain interaction
+      try {
+        await addStencil(props.worldId, hash, props.stencilImage.width, props.stencilImage.height, props.stencilPosition);
+      } catch (error) {
+        console.error("Error submitting stencil:", error);
+        if (!isDevMode) {
+          setIsSubmitting(false);
+          return; // Only return in production mode
+        }
+      }
+      const res = await addStencilData(props.worldId, props.stencilImage.width, props.stencilImage.height, props.stencilColorIds.toString());
+      console.log("Stencil added to DB:", res);
+      props.endStencilCreation();
+      props.setActiveTab("Stencils");
+      const imgHash = hash.substr(2).padStart(64, "0");
+      const newStencil = {
+        favorited: true,
+        favorites: 1,
+        hash: imgHash,
+        height: props.stencilImage.height,
+        name: "",
+        position: props.stencilPosition,
+        stencilId: res.stencilId,
+        width: props.stencilImage.width,
+        worldId: props.worldId,
+      };
+      props.setOpenedStencil(newStencil);
+      setIsSubmitting(false);
     } catch (error) {
-      console.error("Error submitting stencil:", error);
-      if (!isDevMode) return; // Only return in production mode
+      console.error("Error in submit:", error);
+      setIsSubmitting(false);
     }
-    const res = await addStencilData(props.worldId, props.stencilImage.width, props.stencilImage.height, props.stencilColorIds.toString());
-    console.log("Stencil added to DB:", res);
-    props.endStencilCreation();
-    props.setActiveTab("Stencils");
-    const imgHash = hash.substr(2).padStart(64, "0");
-    const newStencil = {
-      favorited: true,
-      favorites: 1,
-      hash: imgHash,
-      height: props.stencilImage.height,
-      name: "",
-      position: props.stencilPosition,
-      stencilId: res.stencilId,
-      width: props.stencilImage.width,
-      worldId: props.worldId,
-    };
-    props.setOpenedStencil(newStencil);
   };
 
   return (
@@ -342,8 +360,9 @@ export const StencilCreationTab = (props: any) => {
           </div>
           <div className="flex flex-row justify-around mt-[1.5rem] align-center">
             <div
-              className="Button__primary Text__medium"
+              className={`Button__primary Text__medium ${isSubmitting ? "Button--disabled" : ""}`}
               onClick={() => {
+                if (isSubmitting) return;
                 playSoftClick2();
                 props.endStencilCreation();
               }}
@@ -351,10 +370,21 @@ export const StencilCreationTab = (props: any) => {
               Cancel
             </div>
             <div
-              className={`Button__primary Text__medium ${!props.stencilCreationSelected ? "Button--disabled" : ""}`}
+              className={`Button__primary Text__medium ${!props.stencilCreationSelected || isSubmitting ? "Button--disabled" : ""}`}
               onClick={() => submit()}
             >
-              Submit
+              {isSubmitting ? (
+                <span className="inline-flex items-center">
+                  Submitting
+                  <span className="inline-flex ml-1">
+                    <span className="animate-[bounce_1s_ease-in-out_infinite]">.</span>
+                    <span className="animate-[bounce_1s_ease-in-out_0.2s_infinite]">.</span>
+                    <span className="animate-[bounce_1s_ease-in-out_0.4s_infinite]">.</span>
+                  </span>
+                </span>
+              ) : (
+                "Submit"
+              )}
             </div>
           </div>
         </div>

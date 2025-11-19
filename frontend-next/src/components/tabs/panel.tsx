@@ -117,6 +117,7 @@ export const TabPanel = (props: any) => {
           setStagingPixels={props.setStagingPixels}
           worldColors={props.colors}
           commitStagingPixels={props.commitStagingPixels}
+          isSubmittingPixels={props.isCommitting}
         />
       </CSSTransition>
       <div className="relative w-full h-full mb-[0.5rem]">
@@ -151,6 +152,7 @@ export const TabPanel = (props: any) => {
           setStagingPixels={props.setStagingPixels}
           worldColors={props.colors}
           commitStagingPixels={props.commitStagingPixels}
+          isSubmittingPixels={props.isCommitting}
         />
       </CSSTransition>
     </div>

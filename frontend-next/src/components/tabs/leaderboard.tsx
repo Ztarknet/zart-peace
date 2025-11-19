@@ -56,8 +56,10 @@ export const LeaderboardTab = (props: any) => {
   const [keyNameMap, setKeyNameMap] = useState({} as any);
   const [useKeyNames, setUseKeyNames] = useState(false);
   const [leaderboardPagination, setLeaderboardPagination] = useState({ page: 1, pageLength: 16 });
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const fetchLeaderboard = async () => {
+      setIsLoading(true);
       try {
         let res = [];
         if (selectedOption.name === "Players") {
@@ -81,12 +83,12 @@ export const LeaderboardTab = (props: any) => {
 
         if (res && res.length !== 0) {
           res.forEach((stat: any) => {
-            // Remove all 0s from the start of stat.key
-            const unpaddedKey = "0x" + stat.key.replace(/^0+/, '');
+            // Use the same format as keysList (with 0x prefix)
+            const paddedKey = "0x" + stat.key;
 
             // Use username if available, otherwise show shortened address
-            if (selectedOption.name !== "Worlds" && usernameMap.has(unpaddedKey)) {
-              newKeyNameMap[stat.key] = usernameMap.get(unpaddedKey);
+            if (selectedOption.name !== "Worlds" && usernameMap.has(paddedKey)) {
+              newKeyNameMap[stat.key] = usernameMap.get(paddedKey);
             } else {
               newKeyNameMap[stat.key] = "0x" + stat.key.slice(0, 4) + "..." + stat.key.slice(-4);
             }
@@ -112,6 +114,8 @@ export const LeaderboardTab = (props: any) => {
         }
       } catch (e) {
         console.error(e);
+      } finally {
+        setIsLoading(false);
       }
     }
     fetchLeaderboard();
@@ -162,25 +166,33 @@ export const LeaderboardTab = (props: any) => {
             <div className="Text__medium">{selectedOption.value}</div>
           </div>
         </div>
-        {leaderboardStats && leaderboardStats.map((stat, i) => (
-          <div key={i} className={`flex justify-between items-center px-4 py-1
-            border-b-2 border-[rgba(0,0,0,0.6)] last:border-b-0
-            ${i % 2 !== 0 ? "bg-[rgba(0,0,0,0.15)]" : ""}
-            `}>
-            <div className="flex items-center">
-              <div className="text-black text-md w-[min(3rem)] mr-4">{i + 1}</div>
-              <div className="text-black text-md w-[max(25rem)] md:w-[max(22rem)] truncate">{useKeyNames ? keyNameMap[stat.key] : stat.key}</div>
-              <Image src={copyIcon} alt="copy" width={16} height={16} onClick={() => {
-                playSoftClick2();
-                copyToClipboard(useKeyNames ? "0x" + stat.key : stat.key);
-              }}
-              className="cursor-pointer hover:scale-105 transform transition-transform active:scale-100 mr-8"/>
-            </div>
-            <div className="flex items-center">
-              <div className="text-black text-bold text-[1.4rem] w-[8rem] text-right">{shortFormNumber(stat.score)}</div>
-            </div>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center flex-1 py-16">
+            <div className="w-[2rem] h-[2rem] border-[3px] border-gray-300 border-t-black rounded-full animate-spin mb-4"></div>
+            <p className="Text__medium text-center">Leaderboard loading...</p>
+            <p className="Text__small text-center text-gray-600 mt-2">This can take upwards of 30 seconds.</p>
           </div>
-        ))}
+        ) : (
+          leaderboardStats && leaderboardStats.map((stat, i) => (
+            <div key={i} className={`flex justify-between items-center px-4 py-1
+              border-b-2 border-[rgba(0,0,0,0.6)] last:border-b-0
+              ${i % 2 !== 0 ? "bg-[rgba(0,0,0,0.15)]" : ""}
+              `}>
+              <div className="flex items-center">
+                <div className="text-black text-md w-[min(3rem)] mr-4">{i + 1}</div>
+                <div className="text-black text-md w-[max(25rem)] md:w-[max(22rem)] truncate">{useKeyNames ? keyNameMap[stat.key] : stat.key}</div>
+                <Image src={copyIcon} alt="copy" width={16} height={16} onClick={() => {
+                  playSoftClick2();
+                  copyToClipboard(useKeyNames ? "0x" + stat.key : stat.key);
+                }}
+                className="cursor-pointer hover:scale-105 transform transition-transform active:scale-100 mr-8"/>
+              </div>
+              <div className="flex items-center">
+                <div className="text-black text-bold text-[1.4rem] w-[8rem] text-right">{shortFormNumber(stat.score)}</div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
       {selectedOption.name === "Worlds" && (
         <div>
