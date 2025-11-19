@@ -7,7 +7,7 @@ export const ExpandableTab = (props: any) => {
   return (
     <div
       className={
-        "absolute p-[0.5rem] pt-[1rem] right-0 flex flex-col justify-center align-center Gradient__standard rounded-[1rem] transition-width duration-200 ease-in-out shadow-[1rem] border-[0.1rem] border-[#8a7a3d] pointer-events-auto" + (props.expanded ? " w-[calc(100vw-1rem)] duration-300" : " w-full")
+        "relative p-[0.5rem] pt-[1rem] flex flex-col justify-center align-center Gradient__standard rounded-[1rem] transition-width duration-200 ease-in-out shadow-[1rem] border-[0.1rem] border-[#8a7a3d] pointer-events-auto" + (props.expanded ? " w-[calc(100vw-1rem)] ml-[calc(100%-100vw+1rem)] duration-300" : " w-full")
       }
     >
       <h1 className="Text__xlarge Heading__main mb-[2rem]">
