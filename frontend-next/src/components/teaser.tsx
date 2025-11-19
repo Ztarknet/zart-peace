@@ -16,8 +16,8 @@ const Teaser = (props: any) => {
               <div className="flex flex-col justify-around items-center h-full w-full">
                 <video autoPlay loop controls className="mb-[1rem] h-full w-full object-cover" src="/videos/art-peace-round-3-nofade.mp4" />
                 <div className="flex flex-col justify-center items-center gap-10">
-                  <h1 className="text-black text-8xl font-bold">zart/peace</h1>
-                  <p className="text-black text-3xl">LFZDrawww!!!</p>
+                  <h1 className="text-[#F4B728] text-8xl font-bold">zart/peace</h1>
+                  <p className="text-[#D9D8D6] text-3xl">Private collaborative art on Starknet</p>
                   <div className="flex justify-center items-center gap-4">
                     <button className="rounded-full overflow-hidden w-[100px]" onClick={() => window.open(xPage)}>
                       <Image src="/icons/x.png" alt="x-logo" width={100} height={100} />

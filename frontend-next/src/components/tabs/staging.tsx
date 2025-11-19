@@ -33,8 +33,8 @@ export const StagingPixelsTab = (props: any) => {
         <div className="flex flex-row items-center justify-center gap-[0.5rem]">
           {props.isSubmittingPixels ? (
             <div className="w-[4.5rem] h-[3rem] flex flex-col items-center justify-center">
-              <div className="w-[1.2rem] h-[1.2rem] border-[2px] border-gray-300 border-t-black rounded-full animate-spin"></div>
-              <p className="text-[0.5rem] text-gray-600 mt-[0.15rem]">Submitting</p>
+              <div className="w-[1.2rem] h-[1.2rem] border-[2px] border-[#636569] border-t-[#F4B728] rounded-full animate-spin"></div>
+              <p className="text-[0.5rem] text-[#F4B728] mt-[0.15rem]">Shielding</p>
             </div>
           ) : (
             <>

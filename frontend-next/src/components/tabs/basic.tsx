@@ -3,7 +3,7 @@ import { playSoftClick2 } from "../utils/sounds";
 export const BasicTab = (props: any) => {
   return (
     <div className="relative p-[0.5rem] pt-[1rem] w-full flex flex-col justify-center align-center Gradient__standard rounded-[1rem]
-      shadow-[1rem] border-[0.1rem] border-[#000000] pointer-events-auto"
+      shadow-[1rem] border-[0.1rem] border-[#8a7a3d] pointer-events-auto"
         style={props.style}
       >
       {props.title && (

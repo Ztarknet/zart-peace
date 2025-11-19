@@ -126,9 +126,9 @@ export const LeaderboardTab = (props: any) => {
 
   return (
     <BasicTab title={getLeaderboardTitle()} {...props}>
-      <div className="flex flex-row justify-around align-center mt-[1rem] mb-[0.5rem] w-[90%] mx-auto bg-[#00000020] p-[3px] rounded-2xl outline outline-[rgba(0,0,0,0.15)] text-nowrap">
+      <div className="flex flex-row justify-around align-center mt-[1rem] mb-[0.5rem] w-[90%] mx-auto bg-[rgba(0,0,0,0.3)] p-[3px] rounded-2xl outline outline-[rgba(138,122,61,0.3)] text-nowrap">
         <p
-          className={`Text__small rounded-2xl py-[0.5rem] flex-1 text-center ${selectedOption.name === "Players" ? "outline outline-[rgba(0,0,0,0.4)] bg-[rgba(255,255,255,0.8)]" : ""} cursor-pointer`}
+          className={`Text__small rounded-2xl py-[0.5rem] flex-1 text-center ${selectedOption.name === "Players" ? "outline outline-[rgba(138,122,61,0.6)] bg-[rgba(138,122,61,0.3)]" : ""} cursor-pointer`}
           onClick={() => {
             playSoftClick2();
             setSelectedOption(leaderboardOptions[0]);
@@ -137,7 +137,7 @@ export const LeaderboardTab = (props: any) => {
           Players
         </p>
         <p
-          className={`Text__small rounded-2xl py-[0.5rem] flex-1 text-center ${selectedOption.name === "Worlds" ? "outline outline-[rgba(0,0,0,0.4)] bg-[rgba(255,255,255,0.8)]" : ""} cursor-pointer`}
+          className={`Text__small rounded-2xl py-[0.5rem] flex-1 text-center ${selectedOption.name === "Worlds" ? "outline outline-[rgba(138,122,61,0.6)] bg-[rgba(138,122,61,0.3)]" : ""} cursor-pointer`}
           onClick={() => {
             playSoftClick2();
             setSelectedOption(leaderboardOptions[1]);
@@ -146,7 +146,7 @@ export const LeaderboardTab = (props: any) => {
           Worlds
         </p>
         <p
-          className={`Text__small rounded-2xl py-[0.5rem] flex-1 text-center ${selectedOption.name === "World Pxs" ? "outline outline-[rgba(0,0,0,0.4)] bg-[rgba(255,255,255,0.8)]" : ""} cursor-pointer truncate`}
+          className={`Text__small rounded-2xl py-[0.5rem] flex-1 text-center ${selectedOption.name === "World Pxs" ? "outline outline-[rgba(138,122,61,0.6)] bg-[rgba(138,122,61,0.3)]" : ""} cursor-pointer truncate`}
           onClick={() => {
             playSoftClick2();
             setSelectedOption(leaderboardOptions[2]);
@@ -155,11 +155,11 @@ export const LeaderboardTab = (props: any) => {
           World
         </p>
       </div>
-      <div className="flex flex-col mx-2 mt-4 border-2 border-[rgba(0,0,0,0.6)] rounded-2xl h-[40rem]
-        overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-        <div className={`flex justify-between items-center py-1 border-b-2 border-[rgba(0,0,0,0.6)] bg-[rgba(0,0,100,0.25)]`}>
+      <div className="flex flex-col mx-2 mt-4 border-2 border-[rgba(138,122,61,0.4)] rounded-2xl h-[40rem]
+        overflow-y-auto scrollbar-thin scrollbar-thumb-[#636569] scrollbar-track-[#1a1a1a]">
+        <div className={`flex justify-between items-center py-1 border-b-2 border-[rgba(138,122,61,0.4)] bg-[rgba(138,122,61,0.2)]`}>
           <div className="flex items-center gap-8 py-2">
-            <div className="text-black text-md w-[min(3rem)]"></div>
+            <div className="text-[#D9D8D6] text-md w-[min(3rem)]"></div>
             <div className="Text__medium">{selectedOption.key}</div>
           </div>
           <div className="flex items-center mr-2">
@@ -168,19 +168,19 @@ export const LeaderboardTab = (props: any) => {
         </div>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center flex-1 py-16">
-            <div className="w-[2rem] h-[2rem] border-[3px] border-gray-300 border-t-black rounded-full animate-spin mb-4"></div>
+            <div className="w-[2rem] h-[2rem] border-[3px] border-[#636569] border-t-[#F4B728] rounded-full animate-spin mb-4"></div>
             <p className="Text__medium text-center">Leaderboard loading...</p>
-            <p className="Text__small text-center text-gray-600 mt-2">This can take upwards of 30 seconds.</p>
+            <p className="Text__small text-center text-[#636569] mt-2">This can take upwards of 30 seconds.</p>
           </div>
         ) : (
           leaderboardStats && leaderboardStats.map((stat, i) => (
             <div key={i} className={`flex justify-between items-center px-4 py-1
-              border-b-2 border-[rgba(0,0,0,0.6)] last:border-b-0
-              ${i % 2 !== 0 ? "bg-[rgba(0,0,0,0.15)]" : ""}
+              border-b-2 border-[rgba(138,122,61,0.2)] last:border-b-0
+              ${i % 2 !== 0 ? "bg-[rgba(0,0,0,0.2)]" : ""}
               `}>
               <div className="flex items-center">
-                <div className="text-black text-md w-[min(3rem)] mr-4">{i + 1}</div>
-                <div className="text-black text-md w-[max(25rem)] md:w-[max(22rem)] truncate">{useKeyNames ? keyNameMap[stat.key] : stat.key}</div>
+                <div className="text-[#D9D8D6] text-md w-[min(3rem)] mr-4">{i + 1}</div>
+                <div className="text-[#D9D8D6] text-md w-[max(25rem)] md:w-[max(22rem)] truncate">{useKeyNames ? keyNameMap[stat.key] : stat.key}</div>
                 <Image src={copyIcon} alt="copy" width={16} height={16} onClick={() => {
                   playSoftClick2();
                   copyToClipboard(useKeyNames ? "0x" + stat.key : stat.key);
@@ -188,7 +188,7 @@ export const LeaderboardTab = (props: any) => {
                 className="cursor-pointer hover:scale-105 transform transition-transform active:scale-100 mr-8"/>
               </div>
               <div className="flex items-center">
-                <div className="text-black text-bold text-[1.4rem] w-[8rem] text-right">{shortFormNumber(stat.score)}</div>
+                <div className="text-[#D9D8D6] text-bold text-[1.4rem] w-[8rem] text-right">{shortFormNumber(stat.score)}</div>
               </div>
             </div>
           ))

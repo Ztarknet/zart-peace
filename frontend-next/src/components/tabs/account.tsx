@@ -305,6 +305,11 @@ export const AccountTab = (props: any) => {
 
   return (
     <BasicTab title="Account" {...props}>
+      {/* Privacy indicator */}
+      <div className="flex flex-row items-center justify-center gap-[0.5rem] mb-[0.5rem] px-[1rem]">
+        <span className="text-[1.2rem]">🛡️</span>
+        <p className="Text__small text-[#F4B728]">Shielded by Ztarknet</p>
+      </div>
       {!address && (
         <div className="flex flex-col align-center justify-center w-full gap-[0.5rem] px-[1rem] my-[2rem]">
           {/* Available Accounts List */}
@@ -322,7 +327,7 @@ export const AccountTab = (props: any) => {
                   >
                     <div className="flex flex-col align-center justify-center gap-[0.2rem]">
                       <p className="Text__large">Connect Account {index + 1}</p>
-                      <p className="Text__small text-gray-600">{addressShort}</p>
+                      <p className="Text__small text-[#636569]">{addressShort}</p>
                     </div>
                   </div>
                 );
@@ -339,7 +344,7 @@ export const AccountTab = (props: any) => {
               <p className="Text__large">
                 {isCreatingAccount ? "Creating Account..." : "Create Account"}
               </p>
-              <p className="Txt__small text-blue-500">Embedded Ztarknet!</p>
+              <p className="Txt__small text-[#F4B728]">Embedded Ztarknet!</p>
             </div>
           </div>
 
@@ -388,20 +393,20 @@ export const AccountTab = (props: any) => {
 
           {/* Username Claim Form */}
           {showUsernameClaim && (
-            <div className="px-[0.5rem] mx-[0.5rem] mt-[1rem] p-[1rem] border-2 border-black bg-gray-100">
+            <div className="px-[0.5rem] mx-[0.5rem] mt-[1rem] p-[1rem] border-2 border-[#8a7a3d] bg-[#1a1a1a] rounded-[0.5rem]">
               <h3 className="Text__large mb-[0.5rem]">Claim Username</h3>
               <input
                 type="text"
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value.toLowerCase())}
                 placeholder="Enter username"
-                className="w-full p-[0.5rem] border-2 border-black Text__medium mb-[0.5rem]"
+                className="w-full p-[0.5rem] border-2 border-[#636569] bg-[#231F20] text-[#D9D8D6] Text__medium mb-[0.5rem] rounded-[0.3rem]"
                 disabled={isClaimingUsername}
               />
               {usernameError && (
-                <p className="Text__small text-red-600 mb-[0.5rem]">{usernameError}</p>
+                <p className="Text__small text-[#C85050] mb-[0.5rem]">{usernameError}</p>
               )}
-              <p className="Text__small text-gray-600 mb-[0.5rem]">
+              <p className="Text__small text-[#636569] mb-[0.5rem]">
                 Only lowercase letters, numbers, hyphens, and underscores allowed (max 31 characters)
               </p>
               <div className="flex flex-row gap-[0.5rem]">
@@ -430,6 +435,7 @@ export const AccountTab = (props: any) => {
           <div className="px-[0.5rem] mx-[0.5rem] mt-[1rem] flex flex-row align-center justify-between">
             <p className="Text__medium pr-[1rem]">Address&nbsp;:</p>
             <div className="flex flex-row align-center flex-grow">
+              <span className="text-[1rem] mr-[0.3rem]">🛡️</span>
               <p className="Text__medium pr-[0.5rem] truncate text-right w-[100%]">
                 {addressShort}
               </p>
@@ -453,12 +459,12 @@ export const AccountTab = (props: any) => {
             </p>
           </div>
 
-          <div className="border-y-2 border-black mx-[1rem] mt-[1rem] py-[1rem]">
+          <div className="border-y-2 border-[#636569] mx-[1rem] mt-[1rem] py-[1rem]">
             <h2 className="Text__large Heading__sub p-[0.5rem] mb-[1rem]">
               Stats
             </h2>
             <div className="mx-[1rem]">
-              <h3 className="text-black text-xl truncate underline mb-[1rem]">
+              <h3 className="text-[#D9D8D6] text-xl truncate underline mb-[1rem]">
                 Totals
               </h3>
               <div className="px-[0.5rem] mx-[0.5rem] flex flex-row align-center justify-between">
@@ -469,7 +475,7 @@ export const AccountTab = (props: any) => {
               </div>
               {props.activeWorld && (
                 <>
-                  <h3 className="text-black text-xl truncate underline mt-[1rem] mb-[1rem]">
+                  <h3 className="text-[#D9D8D6] text-xl truncate underline mt-[1rem] mb-[1rem]">
                     On World &quot;{props.activeWorld.name}&quot;
                   </h3>
                   <div className="px-[0.5rem] mx-[0.5rem] flex flex-row align-center justify-between">
@@ -485,8 +491,8 @@ export const AccountTab = (props: any) => {
               {userRewards && !showClaim && (
                 <div className="mt-[2rem] flex flex-row align-center justify-around">
                   <div>
-                    <p className="text-[2rem] text-blue-500">Congrats!</p>
-                    <p className="text-[1.2rem] text-green-600">
+                    <p className="text-[2rem] text-[#F4B728]">Congrats!</p>
+                    <p className="text-[1.2rem] text-[#50C878]">
                       You won an award!
                     </p>
                   </div>
@@ -502,7 +508,7 @@ export const AccountTab = (props: any) => {
               )}
               {userRewards && showClaim && (
                 <div className="mt-[2rem]">
-                  <h3 className="text-black text-[2rem] text-blue-500">
+                  <h3 className="text-[#F4B728] text-[2rem]">
                     Rewards
                   </h3>
                   <div className="mb-[1rem]">

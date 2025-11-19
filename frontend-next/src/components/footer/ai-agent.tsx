@@ -66,14 +66,14 @@ export const AIController = (props: any) => {
         />
       )}
       {promptStatus.status === "loading" && (
-        <div className="Text__small flex-grow">Thinking{".".repeat(loaderCount)}</div>
+        <div className="Text__small flex-grow text-[#F4B728]">Processing securely{".".repeat(loaderCount)}</div>
       )}
       {promptStatus.status === "running" && (
-        <div className="Text__small flex-grow">Drawing{".".repeat(loaderCount)}</div>
+        <div className="Text__small flex-grow text-[#F4B728]">Shielding pixels{".".repeat(loaderCount)}</div>
       )}
       {promptStatus.status === "error" && (
         <div className="flex-grow">
-        <div className="Text__small flex-grow">Error executing prompt</div>
+        <div className="Text__small flex-grow text-[#C85050]">Error executing prompt</div>
         <div className="Text__small flex-grow">Try being more specific</div>
         </div>
       )}

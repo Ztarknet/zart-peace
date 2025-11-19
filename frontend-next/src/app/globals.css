@@ -2,14 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Zcash/Privacy Theme - Dark mode default */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #1a1a1a;
+  --foreground: #ededed;
+  --zcash-yellow: #F4B728;
+  --zcash-yellow-hover: #FFD060;
+  --zcash-yellow-muted: #8a7a3d;
+  --zcash-black: #231F20;
+  --zcash-gray: #636569;
+  --zcash-gray-light: #D9D8D6;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0a;
+    --background: #231F20;
     --foreground: #ededed;
   }
 }
@@ -76,35 +83,35 @@ input[type="range"]::-moz-range-track {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  background: #000000;
+  background: var(--zcash-yellow);
   height: 20px;
   width: 20px;
   border-radius: 3px;
-  border: 2px solid #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--zcash-black);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   position: relative;
   z-index: 30;
 }
 
 input[type="range"]::-moz-range-thumb {
-  border: 2px solid #ffffff;
-  background: #000000;
+  border: 2px solid var(--zcash-black);
+  background: var(--zcash-yellow);
   height: 20px;
   width: 20px;
   border-radius: 3px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   position: relative;
   z-index: 30;
 }
 
 input[type="range"]:hover::-webkit-slider-thumb {
   transform: scale(1.1);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 3px 6px rgba(244, 183, 40, 0.4);
 }
 
 input[type="range"]:hover::-moz-range-thumb {
   transform: scale(1.1);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 3px 6px rgba(244, 183, 40, 0.4);
 }
 
 .Pixel__img {
@@ -118,9 +125,10 @@ input[type="range"]:hover::-moz-range-thumb {
   background-size: cover;
   background-position: center;
   background-repeat: pixelated;
+  background-color: var(--zcash-black);
   background-image: linear-gradient(
     to bottom right,
-    rgba(0, 0, 0, 0.2),
+    rgba(244, 183, 40, 0.03),
     rgba(0, 0, 0, 0.4)
   );
 
@@ -130,16 +138,16 @@ input[type="range"]:hover::-moz-range-thumb {
 .Gradient__standard {
   background-image: linear-gradient(
     to bottom right,
-    rgba(255, 255, 255, 0.7),
-    rgba(255, 255, 255, 0.9)
+    rgba(35, 31, 32, 0.95),
+    rgba(26, 26, 26, 0.98)
   );
 }
 
 .Gradient__secondary {
   background-image: linear-gradient(
     to bottom right,
-    rgba(255, 255, 255, 0.8),
-    rgba(255, 255, 255, 1)
+    rgba(35, 31, 32, 0.98),
+    rgba(26, 26, 26, 1)
   );
 }
 
@@ -154,12 +162,13 @@ input[type="range"]:hover::-moz-range-thumb {
 
   background: linear-gradient(
     to bottom right,
-    rgba(255, 255, 255, 0.6),
-    rgba(255, 255, 255, 0.8)
+    rgba(35, 31, 32, 0.9),
+    rgba(26, 26, 26, 0.95)
   );
-  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
   border-radius: 50%;
-  border: 0.1rem solid rgba(0, 0, 0, 0.4);
+  border: 0.1rem solid var(--zcash-yellow-muted);
+  color: var(--zcash-gray-light);
 
   cursor: pointer;
   pointer-events: fill;
@@ -169,20 +178,20 @@ input[type="range"]:hover::-moz-range-thumb {
 .Button__circle:hover {
   background: linear-gradient(
     to bottom right,
-    rgba(255, 255, 255, 0.7),
-    rgba(255, 255, 255, 0.9)
+    rgba(244, 183, 40, 0.15),
+    rgba(244, 183, 40, 0.25)
   );
-  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 1rem rgba(244, 183, 40, 0.3);
   transform: scale(1.05) translateY(-0.1rem);
 }
 
 .Button__circle:active {
   background: linear-gradient(
     to bottom right,
-    rgba(255, 255, 255, 0.6),
-    rgba(255, 255, 255, 0.8)
+    rgba(244, 183, 40, 0.1),
+    rgba(244, 183, 40, 0.2)
   );
-  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0.5rem rgba(244, 183, 40, 0.2);
   transform: scale(1) translateY(0);
 }
 
@@ -198,12 +207,13 @@ input[type="range"]:hover::-moz-range-thumb {
 
   background: linear-gradient(
     to bottom right,
-    rgba(255, 255, 255, 0.6),
-    rgba(255, 255, 255, 0.8)
+    rgba(35, 31, 32, 0.9),
+    rgba(26, 26, 26, 0.95)
   );
-  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
   border-radius: 2rem;
-  border: 0.1rem solid rgba(0, 0, 0, 0.4);
+  border: 0.1rem solid var(--zcash-yellow-muted);
+  color: var(--zcash-gray-light);
 
   cursor: pointer;
   pointer-events: fill;
@@ -213,36 +223,36 @@ input[type="range"]:hover::-moz-range-thumb {
 .Button__primary:hover {
   background: linear-gradient(
     to bottom right,
-    rgba(255, 255, 255, 0.7),
-    rgba(255, 255, 255, 0.9)
+    rgba(244, 183, 40, 0.15),
+    rgba(244, 183, 40, 0.25)
   );
-  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 1rem rgba(244, 183, 40, 0.3);
   transform: scale(1.05) translateY(-0.1rem);
 }
 
 .Button__primary:active {
   background: linear-gradient(
     to bottom right,
-    rgba(255, 255, 255, 0.6),
-    rgba(255, 255, 255, 0.8)
+    rgba(244, 183, 40, 0.1),
+    rgba(244, 183, 40, 0.2)
   );
-  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0.5rem rgba(244, 183, 40, 0.2);
   transform: scale(1) translateY(0);
 }
 
 .Button__primary--invalid:active {
   background: linear-gradient(
     to bottom right,
-    rgba(255, 100, 100, 0.6),
-    rgba(255, 100, 100, 0.8)
+    rgba(200, 60, 60, 0.6),
+    rgba(200, 60, 60, 0.8)
   ) !important;
 }
 
 .Button--disabled {
-  background-color: rgba(0, 0, 0, 0.8) !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  background-color: rgba(50, 50, 50, 0.8) !important;
+  border: 1px solid rgba(100, 100, 100, 0.3) !important;
   box-shadow: none !important;
-  color: rgba(0, 0, 60, 0.4) !important;
+  color: rgba(150, 150, 150, 0.5) !important;
   cursor: not-allowed !important;
 }
 
@@ -267,31 +277,32 @@ input[type="range"]:hover::-moz-range-thumb {
 
   background: linear-gradient(
     to bottom right,
-    rgba(255, 255, 255, 0.6),
-    rgba(255, 255, 255, 0.8)
+    rgba(35, 31, 32, 0.9),
+    rgba(26, 26, 26, 0.95)
   );
-  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.5);
   border-radius: 2rem;
-  border: 0.1rem solid rgba(0, 0, 0, 0.4);
+  border: 0.1rem solid var(--zcash-yellow-muted);
+  color: var(--zcash-gray-light);
 
   pointer-events: fill;
 }
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(30, 30, 70, 0.3);
+    box-shadow: 0 0 0 0 rgba(244, 183, 40, 0.4);
   }
   70% {
-    box-shadow: 0 0 0 0.7rem rgba(30, 30, 70, 0);
+    box-shadow: 0 0 0 0.7rem rgba(244, 183, 40, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(30, 30, 70, 0);
+    box-shadow: 0 0 0 0 rgba(244, 183, 40, 0);
   }
 }
 
 .Button--selected {
-  background-color: rgba(60, 60, 90, 0.15);
-  outline: 0.1rem solid rgba(0, 0, 0, 0.4);
+  background-color: rgba(138, 122, 61, 0.2);
+  outline: 0.1rem solid var(--zcash-yellow-muted);
   transform: scale(1.02);
   animation: pulse 1s infinite;
 }
@@ -305,49 +316,49 @@ input[type="range"]:hover::-moz-range-thumb {
   cursor: pointer;
   pointer-events: fill;
   font-size: 1.5rem;
-  color: rgba(0, 0, 0, 0.9);
+  color: var(--zcash-gray-light);
   transition: 0.2s;
 }
 
 .Button__close:hover {
   transform: translateY(-0.3rem) scale(1.05);
-  color: rgba(200, 0, 0, 0.9);
-  text-shadow: 0 0.1rem 0.5rem rgba(0, 0, 0, 0.4);
+  color: rgba(200, 80, 80, 0.9);
+  text-shadow: 0 0.1rem 0.5rem rgba(0, 0, 0, 0.6);
 }
 
 .Button__close:active {
   transform: translateY(0) scale(1);
-  color: rgba(200, 0, 0, 0.9);
-  text-shadow: 0 0.1rem 0.1rem rgba(0, 0, 0, 0.1);
+  color: rgba(200, 80, 80, 0.9);
+  text-shadow: 0 0.1rem 0.1rem rgba(0, 0, 0, 0.3);
 }
 
 .Text__xsmall {
   font-size: 1rem;
-  color: rgba(0, 0, 0, 0.9);
+  color: var(--zcash-gray-light);
   line-height: 1.2rem;
 }
 
 .Text__small {
   font-size: 1.2rem;
-  color: rgba(0, 0, 0, 0.9);
+  color: var(--zcash-gray-light);
   line-height: 1.4rem;
 }
 
 .Text__medium {
   font-size: 1.4rem;
-  color: rgba(0, 0, 0, 0.9);
+  color: var(--zcash-gray-light);
   line-height: 1.6rem;
 }
 
 .Text__large {
   font-size: 1.6rem;
-  color: rgba(0, 0, 0, 0.9);
+  color: var(--zcash-gray-light);
   line-height: 1.8rem;
 }
 
 .Text__xlarge {
   font-size: 1.8rem;
-  color: rgba(0, 0, 0, 0.9);
+  color: var(--zcash-gray-light);
   line-height: 2rem;
 }
 
@@ -361,14 +372,14 @@ input[type="range"]:hover::-moz-range-thumb {
 }
 
 .Link__primary {
-  color: rgb(58, 90, 224);
+  color: var(--zcash-yellow);
   font-weight: bold;
   transition: all 0.2s;
 }
 
 .Link__primary:hover {
-  color: rgb(38, 58, 194);
-  text-shadow: 0 0.1rem 0.1rem rgba(0, 0, 0, 0.1);
+  color: var(--zcash-yellow-hover);
+  text-shadow: 0 0.1rem 0.1rem rgba(244, 183, 40, 0.3);
 }
 
 /* This fires as soon as the element enters the DOM*/
@@ -396,58 +407,59 @@ input[type="range"]:hover::-moz-range-thumb {
   transition: all 100ms;
 }
 
-@keyframes shadow-rainbow {
+@keyframes shadow-gold {
   0% {
-    box-shadow: 0 0 10px rgba(200, 0, 0, 0.6);
+    box-shadow: 0 0 8px rgba(244, 183, 40, 0.4);
   }
-  17% {
-    box-shadow: 0 0 9px rgba(200, 200, 0, 0.6);
-  }
-  34% {
-    box-shadow: 0 0 8px rgba(0, 200, 0, 0.6);
-  }
-  51% {
-    box-shadow: 0 0 8px rgba(0, 200, 200, 0.6);
-  }
-  68% {
-    box-shadow: 0 0 9px rgba(0, 0, 200, 0.6);
-  }
-  85% {
-    box-shadow: 0 0 10px rgba(200, 0, 200, 0.6);
+  50% {
+    box-shadow: 0 0 12px rgba(244, 183, 40, 0.7);
   }
   100% {
-    box-shadow: 0 0 9px rgba(200, 0, 0, 0.6);
+    box-shadow: 0 0 8px rgba(244, 183, 40, 0.4);
   }
 }
 
 @keyframes breathing {
   0%, 100% {
-    transform: translate(-50%, -50%) scale(0.95);
+    transform: translate(-50%, -50%) scale(0.98);
   }
   50% {
-    transform: translate(-50%, -50%) scale(1.07);
+    transform: translate(-50%, -50%) scale(1.02);
   }
 }
 
+.Anim__gold {
+  animation:
+    pulse 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1),
+    shadow-gold 3s infinite;
+}
+
+/* Legacy class name for compatibility */
 .Anim__rainbow {
   animation:
     pulse 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1),
-    shadow-color 3s infinite;
+    shadow-gold 3s infinite;
 }
 
 .Input__primary {
-  border: 0.1rem solid rgba(0, 0, 0, 0.4);
+  border: 0.1rem solid var(--zcash-gray);
   border-radius: 0.5rem;
-  box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.5);
   padding: 0.5rem;
   transition: all 0.2s;
+  background-color: rgba(26, 26, 26, 0.9);
+  color: var(--zcash-gray-light);
 }
 
 .Input__primary:focus {
-  border: 0.1rem solid rgba(0, 0, 0, 0.6);
+  border: 0.1rem solid var(--zcash-yellow-muted);
   outline: none;
-  box-shadow: 0 0.3rem 0.6rem rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0.3rem 0.6rem rgba(138, 122, 61, 0.3);
   transform: translateY(-0.1rem) scale(1.02);
+}
+
+.Input__primary::placeholder {
+  color: var(--zcash-gray);
 }
 
 .Transform__center {

@@ -83,8 +83,8 @@ export const StencilItem = (props: any) => {
 
   return (
     <div
-      className="relative w-full h-[20rem] bg-[rgba(255,255,255,0.4)]
-        border-2 border-[#00000030] rounded-lg shadow-md
+      className="relative w-full h-[20rem] bg-[rgba(0,0,0,0.3)]
+        border-2 border-[#8a7a3d50] rounded-lg shadow-md
         overflow-hidden cursor-pointer"
     >
       <Image
@@ -99,7 +99,7 @@ export const StencilItem = (props: any) => {
       {showInfo && (
         <div className="Buttonlike__primary absolute top-0 left-0 px-[1rem] py-[0.5rem] w-[98%]
         ">
-          <p className="text-[1rem] text-black p-0 m-0 overflow-x-scroll text-nowrap">by {creatorText}</p>
+          <p className="text-[1rem] text-[#D9D8D6] p-0 m-0 overflow-x-scroll text-nowrap">by {creatorText}</p>
         </div>
       )}
       <div className="FavoriteButton absolute bottom-0 right-0 w-full flex flex-row justify-end items-center pointer-events-none">
