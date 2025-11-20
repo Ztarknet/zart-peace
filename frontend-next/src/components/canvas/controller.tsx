@@ -314,6 +314,52 @@ export const CanvasController = (props: any) => {
     setCanvasScale(resetCanvasScale);
   }, [props.activeTab]);
 
+  // Zoom to stencil when loaded from URL deep link
+  useEffect(() => {
+    if (!props.shouldZoomToStencil) return;
+    if (!props.openedStencil) return;
+    if (!canvasControllerRef.current) return;
+
+    const stencil = props.openedStencil;
+    const containerRect = canvasControllerRef.current.getBoundingClientRect();
+
+    // Calculate stencil position from linear position
+    const stencilX = stencil.position % props.width;
+    const stencilY = Math.floor(stencil.position / props.width);
+
+    // Calculate stencil center including world origin offset
+    const stencilCenterX = selectedWorldOrigin.x + stencilX + stencil.width / 2;
+    const stencilCenterY = selectedWorldOrigin.y + stencilY + stencil.height / 2;
+
+    // Calculate scale so stencil takes 70% of viewport
+    // Use the dimension that would be more constraining
+    const windowWidth = containerRect.width;
+    const windowHeight = containerRect.height;
+
+    const scaleForWidth = (windowWidth * 0.7) / stencil.width;
+    const scaleForHeight = (windowHeight * 0.7) / stencil.height;
+
+    // Use the smaller scale to ensure stencil fits within 70%
+    let newScale = Math.min(scaleForWidth, scaleForHeight);
+
+    // Clamp to min/max scale
+    if (newScale < minScale) newScale = minScale;
+    if (newScale > maxScale) newScale = maxScale;
+
+    // Calculate canvas position to center the stencil
+    // Account for base offset (-baseWorldX/2, -baseWorldY/2) applied via CSS
+    const newCanvasX = windowWidth / 2 + baseWorldX / 2 - stencilCenterX * newScale * artificialZoom;
+    const newCanvasY = windowHeight / 2 + baseWorldY / 2 - stencilCenterY * newScale * artificialZoom;
+
+    setCanvasScale(newScale);
+    setCanvasX(newCanvasX);
+    setCanvasY(newCanvasY);
+    setTitleScale(newScale * 0.95);
+
+    // Reset the flag
+    props.setShouldZoomToStencil(false);
+  }, [props.shouldZoomToStencil, props.openedStencil, props.width, selectedWorldOrigin]);
+
   // Pixel Selection Data
   const [selectedBoxShadow, setSelectedBoxShadow] = useState("")
   const [selectedBackgroundColor, setSelectedBackgroundColor] = useState("")

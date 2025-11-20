@@ -80,9 +80,12 @@ export const getStencils = async (pageLength: number, page: number, worldId: any
   }
 }
 
-export const getStencil = async (stencilId: string): Promise<any> => {
+export const getStencil = async (stencilId: string, worldId?: number): Promise<any> => {
   try {
-    const getStencilEndpoint = `${backendUrl}/get-stencil?stencilId=${stencilId}`;
+    let getStencilEndpoint = `${backendUrl}/get-stencil?stencilId=${stencilId}`;
+    if (worldId !== undefined) {
+      getStencilEndpoint += `&worldId=${worldId}`;
+    }
     const stencil = await fetchJsonData(getStencilEndpoint);
     return stencil;
   } catch (error) {

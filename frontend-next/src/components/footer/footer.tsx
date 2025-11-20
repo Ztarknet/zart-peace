@@ -14,7 +14,12 @@ export const Footer = (props: any) => {
   return (
     <div className="fixed bottom-0 left-0 flex flex-col align-center justify-center w-full pointer-events-none">
       {enableController && (
-      <GameController {...props} setActiveTab={props.setActiveTab} />
+      <GameController
+        {...props}
+        setActiveTab={props.setActiveTab}
+        showLFDrawButton={props.showLFDrawButton}
+        setShowLFDrawButton={props.setShowLFDrawButton}
+      />
       )}
         {isMobile ? (
           <div className="flex justify-center items-center w-full px-2 pb-2 sm:pb-4 Footer__mobile">

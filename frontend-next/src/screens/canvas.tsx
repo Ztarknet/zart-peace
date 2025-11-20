@@ -12,10 +12,11 @@ import { Footer } from "../components/footer/footer";
 import { websocketUrl } from "../api/api";
 import { getWorlds, getHomeWorlds, getWorld } from "../api/worlds";
 import { getCanvasColors } from "../api/canvas";
+import { getStencil } from "../api/stencils";
 import { playPixelPlaced2 } from "../components/utils/sounds";
 
 const Canvas = (props: any) => {
-  const { chain } = useAccount();
+  const { chain, address } = useAccount();
   const { placePixels, provider } = useZtarknetConnector();
 
   // Game Data
@@ -26,6 +27,9 @@ const Canvas = (props: any) => {
   const baseWorldId = parseInt(process.env.NEXT_PUBLIC_BASE_WORLD_ID as string) || 0;
   const [openedWorldId, setOpenedWorldId] = useState<number>(baseWorldId);
   const [activeWorld, setActiveWorld] = useState<any>(null);
+  const [initialStencilId, setInitialStencilId] = useState<string | null>(null);
+  const [shouldZoomToStencil, setShouldZoomToStencil] = useState<boolean>(false);
+  const [showLFDrawButton, setShowLFDrawButton] = useState<boolean>(false);
   const baseWorldX = process.env.NEXT_PUBLIC_WORLD_X || 528;
   const [worldWidth, setWorldWidth] = useState<number>(baseWorldX as number);
   const [surroundingWorlds, setSurroundingWorlds] = useState<any[]>([]);
@@ -54,6 +58,48 @@ const Canvas = (props: any) => {
 
     fetchWorldData();
   }, []);
+
+  // Parse URL path on mount to handle deep links like /world/123/stencil/456
+  useEffect(() => {
+    const path = window.location.pathname;
+
+    // Match pattern: /world/{worldId} or /world/{worldId}/stencil/{stencilId}
+    const worldMatch = path.match(/\/world\/(\d+)/);
+    const stencilMatch = path.match(/\/world\/\d+\/stencil\/(\d+)/);
+
+    if (worldMatch) {
+      const worldId = parseInt(worldMatch[1], 10);
+      if (!isNaN(worldId)) {
+        setOpenedWorldId(worldId);
+      }
+    }
+
+    if (stencilMatch) {
+      const stencilId = stencilMatch[1];
+      setInitialStencilId(stencilId);
+    }
+  }, []);
+
+  // Fetch and set stencil when initialStencilId is set from URL
+  // Wait for activeWorld to be loaded before fetching stencil
+  useEffect(() => {
+    const fetchInitialStencil = async () => {
+      if (!initialStencilId) return;
+      if (!activeWorld) return; // Wait for world to load first
+
+      const stencil = await getStencil(initialStencilId, openedWorldId);
+      if (stencil) {
+        setOpenedStencil(stencil);
+        setShouldZoomToStencil(true);
+        setShowLFDrawButton(true);
+        // Clear initialStencilId after fetching to prevent re-fetching
+        setInitialStencilId(null);
+      }
+    };
+
+    fetchInitialStencil();
+  }, [initialStencilId, activeWorld]);
+
   useEffect(() => {
     const fetchWorldData = async () => {
       const world = await getWorld(openedWorldId.toString());
@@ -729,6 +775,8 @@ const Canvas = (props: any) => {
         stencilImage={stencilImage}
         openedStencil={openedStencil}
         setOpenedStencil={setOpenedStencil}
+        shouldZoomToStencil={shouldZoomToStencil}
+        setShouldZoomToStencil={setShouldZoomToStencil}
         endStencilCreation={endStencilCreation}
         stencilPosition={stencilPosition}
         setStencilCreationSelected={setStencilCreationSelected}
@@ -820,6 +868,7 @@ const Canvas = (props: any) => {
         selectedBotOption={selectedBotOption}
         setSelectedBotOption={setSelectedBotOption}
         openedStencil={openedStencil}
+        setOpenedStencil={setOpenedStencil}
         canvasRef={worldCanvasRef}
         worldColors={worldColors}
         stagingPixels={stagingPixels}
@@ -827,6 +876,8 @@ const Canvas = (props: any) => {
         agentTransactions={agentTransactions}
         setAgentTransactions={setAgentTransactions}
         isCommitting={isCommitting}
+        showLFDrawButton={showLFDrawButton}
+        setShowLFDrawButton={setShowLFDrawButton}
       />
     </div>
   );

@@ -25,6 +25,11 @@ export const GameController = (props: any) => {
   }, [props.worldId]);
 
   useEffect(() => {
+    // Show LFDraw! button when loading from deep link
+    if (props.showLFDrawButton) {
+      setControllerText("LFDraw!");
+      return;
+    }
     if (!address) {
       setControllerText("Create Account");
       return;
@@ -63,7 +68,8 @@ export const GameController = (props: any) => {
     props.basePixelTimer,
     address,
     controllerText,
-    placementMode
+    placementMode,
+    props.showLFDrawButton
   ]);
 
   const toSelectorMode = async (event: any) => {
@@ -71,6 +77,24 @@ export const GameController = (props: any) => {
     event.preventDefault();
     // Only works if not hitting the close button
     if (event.target.classList.contains("Button__close")) {
+      return;
+    }
+
+    // Handle LFDraw! button click
+    if (props.showLFDrawButton) {
+      if (address) {
+        // User is logged in - activate stencil bot
+        if (!props.botMode) {
+          props.toggleBotMode();
+        }
+        setTimeout(() => {
+          props.setSelectedBotOption("Start Stencil Bot");
+        }, 10);
+      } else {
+        // User not logged in - open account tab
+        props.setActiveTab("Account");
+      }
+      props.setShowLFDrawButton(false);
       return;
     }
 
@@ -132,9 +156,11 @@ export const GameController = (props: any) => {
         <div
           className={
             "Button__primary Text__large " +
-            (props.availablePixels > props.availablePixelsUsed
-              ? ""
-              : "Button__primary--invalid")
+            (props.showLFDrawButton
+              ? "animate-pulse"
+              : (props.availablePixels > props.availablePixelsUsed
+                ? ""
+                : "Button__primary--invalid"))
           }
           onClick={toSelectorMode}
         >
@@ -215,7 +241,18 @@ export const GameController = (props: any) => {
           isCommitting={props.isCommitting}
         />
       )}
-      {address && (
+      {props.showLFDrawButton ? (
+        <div
+          className="ml-[0.5rem] Button__circle flex items-center justify-center"
+          onClick={() => {
+            playSoftClick2();
+            props.setOpenedStencil(null);
+            props.setShowLFDrawButton(false);
+          }}
+        >
+          <span className="Text__large" style={{ transform: 'translate(1px, -2px)' }}>x</span>
+        </div>
+      ) : address && (
         <div
           className="ml-[0.5rem] Button__circle relative"
           onClick={() => {

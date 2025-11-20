@@ -6,6 +6,7 @@ import { useZtarknetConnector } from '@/context/ZtarknetConnector';
 import FavoriteIcon from "../../../public/icons/Favorite.png";
 import FavoritedIcon from "../../../public/icons/Favorited.png";
 import Info from "../../../public/icons/Info.png";
+import ShareIcon from "../../../public/icons/Share.png";
 import bot from "../../../public/icons/bot.png";
 import { playSoftClick2 } from "../utils/sounds";
 import { getStencilOwner } from "../../api/stencils";
@@ -15,6 +16,7 @@ export const StencilItem = (props: any) => {
   const { getUsernameForAddress, favoriteStencil, unfavoriteStencil } = useZtarknetConnector();
 
   const [showInfo, setShowInfo] = useState(false);
+  const [showCopied, setShowCopied] = useState(false);
   const [creatorText, setCreatorText] = useState("...");
   useEffect(() => {
     const getCreator = async () => {
@@ -81,6 +83,18 @@ export const StencilItem = (props: any) => {
     }
   }
 
+  const handleShare = async () => {
+    playSoftClick2();
+    const shareUrl = `${window.location.origin}/world/${props.activeWorld.worldId}/stencil/${props.stencil.stencilId}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy URL:', err);
+    }
+  }
+
   return (
     <div
       className="relative w-full h-[20rem] bg-[rgba(0,0,0,0.3)]
@@ -102,19 +116,14 @@ export const StencilItem = (props: any) => {
           <p className="text-[1rem] text-[#D9D8D6] p-0 m-0 overflow-x-scroll text-nowrap">by {creatorText}</p>
         </div>
       )}
-      <div className="FavoriteButton absolute bottom-0 right-0 w-full flex flex-row justify-end items-center pointer-events-none">
+      {showCopied && (
+        <div className="Buttonlike__primary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-4 py-2 z-20">
+          <p className="Text__medium p-0 m-0">Copied!</p>
+        </div>
+      )}
+      <div className="FavoriteButton absolute bottom-0 right-0 flex flex-row justify-end items-end pointer-events-none p-2">
         <button
-          className={`${address ? "" : "Button--disabled"} Button__circle h-[3rem] w-[3rem] m-2 ml-1`}
-          onClick={handleStencilBot}
-        >
-          <Image
-            src={bot}
-            alt="Stencil Bot"
-            className="h-[2rem]"
-          />
-        </button>
-        <button
-          className={`${address ? "" : "Button--disabled"} Button__primary h-[3rem]`}
+          className={`${address ? "" : "Button--disabled"} Button__primary h-[3rem] mr-2`}
           onClick={handleFavoritePress}
         >
           <Image
@@ -126,18 +135,39 @@ export const StencilItem = (props: any) => {
           />
           <p className="Text__medium p-0 m-0 text-center w-[3.5rem]">{props.stencil.favorites}</p>
         </button>
-        <button className="Button__circle h-[3rem] w-[3rem] m-2 ml-1" onClick={() => {
-          playSoftClick2();
-          setShowInfo(!showInfo);
-        }}>
-          <Image
-            src={Info}
-            alt="Info"
-            width={24}
-            height={24}
-            className="p-0 m-0"
-          />
-        </button>
+        <div className="flex flex-col gap-1">
+          <button
+            className={`${address ? "" : "Button--disabled"} Button__circle h-[3rem] w-[3rem]`}
+            onClick={handleStencilBot}
+          >
+            <Image
+              src={bot}
+              alt="Stencil Bot"
+              className="h-[2rem]"
+            />
+          </button>
+          <button className="Button__circle h-[3rem] w-[3rem]" onClick={handleShare}>
+            <Image
+              src={ShareIcon}
+              alt="Share"
+              width={24}
+              height={24}
+              className="p-0 m-0"
+            />
+          </button>
+          <button className="Button__circle h-[3rem] w-[3rem]" onClick={() => {
+            playSoftClick2();
+            setShowInfo(!showInfo);
+          }}>
+            <Image
+              src={Info}
+              alt="Info"
+              width={24}
+              height={24}
+              className="p-0 m-0"
+            />
+          </button>
+        </div>
       </div>
     </div>
   );
